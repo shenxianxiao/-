@@ -1,0 +1,5301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生积分管理系统</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+.lock-icon {
+    position: fixed;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 100;
+    transition: background-color 0.3s ease;
+}
+
+.lock-icon.locked {
+    background-color: #FF6B6B;
+    color: white;
+}
+
+.lock-icon.unlocked {
+    background-color: #4CAF50;
+    color: white;
+}
+        }
+        
+        body {
+            background: linear-gradient(-45deg, #f5f7fa, #e4ecf7, #eef2f7, #eaf6ff);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+      * {
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: linear-gradient(-45deg, #f5f7fa, #e4ecf7, #eef2f7, #eaf6ff);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+    min-height: 100vh;
+    padding: 20px;
+    position: relative;
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    padding-bottom: 20px;
+    box-sizing: border-box;
+}
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .school-name {
+    font-size: 28px;
+    font-weight: bold;
+    color: #4682B4;
+    cursor: pointer;
+    /* 可能需要增加宽度 */
+    max-width: 500px; /* 添加这一行 */
+}
+        
+      .school-name-edit {
+    font-size: 28px;
+    font-weight: bold;
+    color: #4682B4;
+    border: 2px solid #4682B4;
+    border-radius: 5px;
+    padding: 5px;
+    outline: none;
+    width: 400px; /* 将300px改为400px */
+}
+        
+        .class-btn {
+            background-color: #4285F4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        
+        .class-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background-color: #E8F0FE;
+            color: #4285F4;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        
+        .nav-btn.active {
+            background-color: #4285F4;
+            color: white;
+        }
+        
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+        
+    .groups-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin: 20px;
+    justify-content: center;
+}
+        
+.group {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+        
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: #F9E2AF;
+            color: #333;
+        }
+        
+        .group-name {
+            font-weight: bold;
+        }
+        
+        .total-points {
+            background-color: #F2CA4B;
+            padding: 2px 10px;
+            border-radius: 15px;
+        }
+        
+        .student-list {
+            padding: 10px 0;
+        }
+        
+       .student-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 15px;
+    margin: 5px 10px;
+    background-color: #F0F8FF;
+    border-radius: 5px;
+    align-items: center;
+    flex-wrap: nowrap;
+    box-sizing: border-box;
+}
+        
+.student-name {
+    color: #1a73e8;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+}
+        
+.student-point {
+    background-color: #B3E5FC;
+    padding: 2px 10px;
+    border-radius: 15px;
+    min-width: 50px;
+    text-align: center;
+    flex-shrink: 0;
+}
+        
+        .points-screen {
+            display: none;
+            margin: 20px;
+        }
+        
+        .points-options {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+    .point-btn {
+    width: 60px;  /* 设置固定宽度 */
+    height: 40px; /* 设置固定高度 */
+    padding: 0;   /* 移除内边距 */
+    background-color: #F9E2AF;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    font-weight: bold;
+    display: flex;          /* 使用flexbox */
+    align-items: center;    /* 垂直居中 */
+    justify-content: center;/* 水平居中 */
+}
+        
+        .point-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        
+        .student-select {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #E8F0FE;
+            border-radius: 8px;
+        }
+        
+        .student-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            display: inline-block;
+            position: relative;
+            cursor: pointer;
+            background-color: white;
+        }
+        
+        .student-checkbox.selected::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: green;
+            font-weight: bold;
+        }
+        
+        .confirmation {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .confirm-btn {
+            padding: 10px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid;
+            transition: transform 0.2s;
+        }
+        
+        .confirm-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .confirm-btn.yes {
+            background-color: white;
+            border-color: green;
+            color: green;
+        }
+        
+        .confirm-btn.no {
+            background-color: white;
+            border-color: red;
+            color: red;
+        }
+        
+        .upload-container {
+            text-align: center;
+            margin: 50px 0;
+        }
+        
+        #file-upload {
+            display: none;
+        }
+        
+        .upload-btn {
+            background-color: #4285F4;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+        
+        .upload-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .upload-text {
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .check-icon::after {
+            content: "✓";
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .cross-icon::after {
+            content: "✕";
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .author-credit {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            color: #4682B4;
+            font-size: 14px;
+            font-style: italic;
+        }
+      @media (max-width: 768px) {
+    .group {
+        min-width: 150px;
+        max-width: 100%;
+        margin: 0 5px;
+    }
+    
+    .student-item {
+        padding: 6px 10px;
+        margin: 3px 5px;
+    }
+    
+    .student-point {
+        min-width: 40px;
+        padding: 2px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .groups-container {
+        gap: 10px;
+        margin: 10px;
+    }
+    
+    .group {
+        min-width: 100%;
+    }
+    
+    .nav-btn {
+        font-size: 16px;
+        padding: 10px;
+    }
+}
+      /* 全局锁定样式 */
+.student-select.locked {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.point-btn.locked, 
+.custom-point-input.locked,
+.confirm-btn.locked {
+    pointer-events: none;
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.student-item.locked .student-name {
+    pointer-events: none;
+}
+
+/* 锁定时的视觉提示 */
+.global-locked .add-points-screen,
+.global-locked .subtract-points-screen,
+.global-locked .home-screen {
+    position: relative;
+}
+
+.global-locked .add-points-screen::after,
+.global-locked .subtract-points-screen::after,
+.global-locked .home-screen::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(200, 200, 200, 0.1);
+    pointer-events: none;
+    z-index: 5;
+}
+	.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    border-radius: 5px;
+}
+
+.dropdown-content a {
+    color: #4285F4;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+}
+
+.dropdown-content a:hover {
+    background-color: #E8F0FE;
+    border-radius: 5px;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .class-btn {
+    background-color: #3367d6;
+}
+.custom-point-input {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+
+.point-input {
+    width: 70px;
+    padding: 8px;
+    border: 2px solid #F9E2AF;
+    border-radius: 20px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.input-confirm {
+    display: flex;
+    flex-direction: row;
+    margin-left: 8px;
+}
+
+.input-confirm-yes, .input-confirm-no {
+    cursor: pointer;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 3px;
+}
+
+.input-confirm-yes {
+    color: white;
+    background-color: #4CAF50;
+}
+
+.input-confirm-no {
+    color: white;
+    background-color: #F44336;
+}   
+    /* 浮动工具栏样式 */
+.floating-toolbar {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 200;
+}
+
+.toolbar-button {
+    width: 80px;
+    height: 50px;
+    border-radius: 15%;
+    background-color: #4682B4;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    font-size: 12px;
+    text-align: center;
+}
+
+.toolbar-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.toolbar-button.active {
+    background-color: #FF6B6B;
+}
+
+/* 座位调整模块容器 */
+#seating-module {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    z-index: 150;
+}
+      .group-point-edit {
+    position: absolute;
+    background: white;
+    border: 2px solid #F2CA4B;
+    border-radius: 10px;
+    padding: 10px;
+    z-index: 100;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+}
+
+.group-point-input {
+    width: 60px;
+    padding: 5px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-right: 5px;
+    font-weight: bold;
+}
+
+.group-point-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.group-point-btn {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+}
+
+.group-point-confirm {
+    background-color: #4CAF50;
+}
+
+.group-point-cancel {
+    background-color: #F44336;
+}
+      /* 锁图标容器样式 */
+.lock-container {
+    position: fixed;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+}
+
+/* 锁图标下拉菜单 */
+.lock-dropdown {
+    position: absolute;
+    left: 60px;
+    top: 0;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    width: 160px;
+    display: none;
+    z-index: 101;
+}
+
+.lock-container:hover .lock-dropdown {
+    display: block;
+}
+
+.lock-menu-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lock-menu-item:hover {
+    background-color: #f5f5f5;
+}
+
+.lock-menu-item:last-child {
+    border-bottom: none;
+}
+
+/* 密码对话框样式 */
+.password-dialog {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.password-dialog-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 300px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+
+.password-dialog-header {
+    padding: 15px;
+    background-color: #4682B4;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.password-dialog-close {
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.password-dialog-body {
+    padding: 20px;
+}
+
+.password-dialog-body input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.password-error {
+    color: #FF6B6B;
+    font-size: 12px;
+    margin-top: 5px;
+    min-height: 18px;
+}
+
+.password-dialog-footer {
+    padding: 10px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #eee;
+}
+
+.password-dialog-footer button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#password-cancel-btn {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+#password-confirm-btn {
+    background-color: #4682B4;
+    color: white;
+}
+
+/* 开关按钮样式 */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 20px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #4CAF50;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+      /* 作业查收模块样式 */
+#homework-module {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(-45deg, #e8f5e8, #f0f8f0, #e6f7e6, #edf9ed);
+    background-size: 400% 400%;
+    animation: homework-gradient 15s ease infinite;
+    z-index: 150;
+    overflow-y: auto;
+}
+
+@keyframes homework-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.homework-header {
+    background-color: rgba(76, 175, 80, 0.9);
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.homework-header h1 {
+    margin: 0;
+    font-size: 2.5em;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.homework-back-btn {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.homework-back-btn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.homework-controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    flex-wrap: wrap;
+}
+
+.homework-btn {
+    padding: 12px 24px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.homework-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.homework-btn:active {
+    transform: translateY(0);
+}
+
+.homework-cards-container {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);  /* 固定8列 */
+    gap: 15px;
+    padding: 20px;
+    max-width: 1800px;  /* 增加最大宽度以适应8列 */
+    margin: 0 auto;
+}
+
+.student-homework-card {
+    background: linear-gradient(135deg, #fff, #f8f9fa);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.student-homework-card.disappeared {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8);
+    visibility: hidden;
+}
+
+.student-homework-card.disappeared::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+}
+      
+.student-homework-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.student-homework-card.dissolving {
+    animation: dissolve-effect 1s ease-out forwards;
+}
+
+@keyframes dissolve-effect {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(0.8);
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
+.homework-card-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.homework-card-status {
+    font-size: 14px;
+    color: #7f8c8d;
+}
+
+.homework-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(76, 175, 80, 0.9);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 200;
+    transition: all 0.5s ease;
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+}
+
+.homework-stats {
+    background-color: rgba(255, 255, 255, 0.9);
+    margin: 20px;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.homework-stats h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 20px;
+}
+
+.stats-item {
+    display: inline-block;
+    margin: 0 20px;
+    font-size: 16px;
+}
+
+.stats-number {
+    font-weight: bold;
+    font-size: 24px;
+    color: #4CAF50;
+}
+
+.stats-submitted {
+    color: #4CAF50;
+}
+
+.stats-pending {
+    color: #f39c12;
+}
+
+@media (max-width: 768px) {
+    .homework-cards-container {
+       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .student-homework-card {
+        padding: 15px;
+    }
+    
+    .homework-controls {
+        padding: 15px;
+        gap: 15px;
+    }
+    
+    .homework-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+}
+    </style>
+</head>
+<body>
+  <div id="lock-container" class="lock-container">
+    <div id="lock-icon" class="lock-icon locked">
+        🔒
+    </div>
+    <div id="lock-dropdown" class="lock-dropdown">
+        <div class="lock-menu-item" id="set-password">设置密码</div>
+        <div class="lock-menu-item" id="toggle-password-protection">
+            <span>密码保护</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="password-protection-toggle" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- 密码对话框 -->
+<div id="password-dialog" class="password-dialog">
+    <div class="password-dialog-content">
+        <div class="password-dialog-header">
+            <span id="password-dialog-title">请输入密码</span>
+            <span class="password-dialog-close">&times;</span>
+        </div>
+        <div class="password-dialog-body">
+            <input type="password" id="password-input" placeholder="请输入密码">
+            <input type="password" id="confirm-password-input" placeholder="确认密码" style="display: none;">
+            <div class="password-error" id="password-error"></div>
+        </div>
+        <div class="password-dialog-footer">
+            <button id="password-cancel-btn">取消</button>
+            <button id="password-confirm-btn">确认</button>
+        </div>
+    </div>
+</div>
+  <div class="floating-toolbar">
+    <div id="points-button" class="toolbar-button active">积分管理</div>
+    <div id="seating-button" class="toolbar-button">座位调整</div>
+    <div id="homework-button" class="toolbar-button">作业查收</div>
+</div>
+
+<!-- 座位调整模块容器 -->
+<div id="seating-module"></div>
+  <!-- 作业查收模块容器 -->
+<div id="homework-module"></div>
+ <div class="container">
+        <div class="header">
+            <div id="school-name-container" class="school-name">银川路小学学生积分管理系统</div>
+            <div class="dropdown">
+    <button id="class-btn" class="class-btn">读取班级</button>
+    <div class="dropdown-content">
+        <a id="upload-btn" href="#">上传文件</a>
+        <a id="download-btn" href="#">下载文件</a>
+    </div>
+</div>
+        </div>
+        
+        <div id="main-content">
+            <div id="upload-section" class="upload-container">
+                <p class="upload-text">请上传学生数据Excel文件</p>
+                <label for="file-upload" class="upload-btn">选择文件</label>
+                <input type="file" id="file-upload" accept=".xlsx, .xls" />
+            </div>
+            
+            <div id="data-section" style="display: none;">
+                <div class="nav">
+                    <button id="home-btn" class="nav-btn active">首页</button>
+                    <button id="add-points-btn" class="nav-btn">加分</button>
+                    <button id="subtract-points-btn" class="nav-btn">减分</button>
+                </div>
+                
+                <div id="home-screen" class="groups-container"></div>
+                
+                <div id="add-points-screen" class="points-screen">
+                    <div class="points-options">
+                        <button class="point-btn" data-value="1">+1</button>
+                        <button class="point-btn" data-value="2">+2</button>
+                        <button class="point-btn" data-value="3">+3</button>
+                        <button class="point-btn" data-value="4">+4</button>
+                        <button class="point-btn" data-value="5">+5</button>
+			<div class="custom-point-input">
+    <input type="number" class="point-input" placeholder="自定义" min="1" max="100">
+    <div class="input-confirm">
+        <span class="input-confirm-yes">✓</span>
+        <span class="input-confirm-no">✕</span>
+    </div>
+</div>
+                    </div>
+                    <div id="add-students-grid" class="students-grid"></div>
+                    <div class="confirmation">
+                        <div class="confirm-btn yes"><span class="check-icon"></span></div>
+                        <div class="confirm-btn no"><span class="cross-icon"></span></div>
+                    </div>
+                </div>
+                
+                <div id="subtract-points-screen" class="points-screen">
+                    <div class="points-options">
+                        <button class="point-btn" data-value="1">-1</button>
+                        <button class="point-btn" data-value="2">-2</button>
+                        <button class="point-btn" data-value="3">-3</button>
+                        <button class="point-btn" data-value="4">-4</button>
+                        <button class="point-btn" data-value="5">-5</button>
+			<div class="custom-point-input">
+    <input type="number" class="point-input" placeholder="自定义" min="1" max="100">
+    <div class="input-confirm">
+        <span class="input-confirm-yes">✓</span>
+        <span class="input-confirm-no">✕</span>
+    </div>
+</div>
+                    </div>
+                    <div id="subtract-students-grid" class="students-grid"></div>
+                    <div class="confirmation">
+                        <div class="confirm-btn yes"><span class="check-icon"></span></div>
+                        <div class="confirm-btn no"><span class="cross-icon"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+    <div class="author-credit"></div>
+    
+    <script>
+        // Global variables
+        let studentData = [];
+        let groupData = [];
+        let selectedStudents = [];
+        let selectedPointValue = 1;
+        let currentMode = "add"; // "add" or "subtract"
+        let className = "";
+        let schoolName = "银川路小学";
+        let isLocked = true; // 全局锁定状态变量
+        let activePointEditor = null; // 当前活动的积分编辑器
+      let passwordProtectionEnabled = true; // 默认启用密码保护
+let password = ''; // 密码
+        // DOM Elements
+        const fileUpload = document.getElementById('file-upload');
+        const uploadSection = document.getElementById('upload-section');
+        const dataSection = document.getElementById('data-section');
+        const homeScreen = document.getElementById('home-screen');
+        const addPointsScreen = document.getElementById('add-points-screen');
+        const subtractPointsScreen = document.getElementById('subtract-points-screen');
+        const homeBtn = document.getElementById('home-btn');
+        const addPointsBtn = document.getElementById('add-points-btn');
+        const subtractPointsBtn = document.getElementById('subtract-points-btn');
+        const classBtn = document.getElementById('class-btn');
+        const addStudentsGrid = document.getElementById('add-students-grid');
+        const subtractStudentsGrid = document.getElementById('subtract-students-grid');
+        const toast = document.getElementById('toast');
+        const schoolNameContainer = document.getElementById('school-name-container');
+        
+// 中文 base64 编码
+function utf8_to_b64(str) {
+    return window.btoa(unescape(encodeURIComponent(str)));
+}
+ 
+ 
+// 中文 base64 解码
+function b64_to_utf8(str) {
+    return decodeURIComponent(escape(window.atob(str)));
+}
+
+      // 更新所有元素的锁定状态
+function updateAllLockStates() {
+    // 加分/减分页面的学生选择元素
+    const studentSelects = document.querySelectorAll('.student-select');
+    // 积分按钮
+    const pointBtns = document.querySelectorAll('.point-btn');
+    // 自定义积分输入
+    const customInputs = document.querySelectorAll('.custom-point-input');
+    // 确认/取消按钮
+    const confirmBtns = document.querySelectorAll('.confirm-btn');
+    // 首页学生项
+    const studentItems = document.querySelectorAll('.student-item');
+    // 总分元素（用于编辑）
+    const totalPoints = document.querySelectorAll('.total-points');
+    
+    if (isLocked) {
+        // 锁定状态
+        studentSelects.forEach(item => item.classList.add('locked'));
+        pointBtns.forEach(btn => btn.classList.add('locked'));
+        customInputs.forEach(input => input.classList.add('locked'));
+        confirmBtns.forEach(btn => btn.classList.add('locked'));
+        studentItems.forEach(item => item.classList.add('locked'));
+        totalPoints.forEach(item => item.setAttribute('data-locked', 'true'));
+    } else {
+        // 解锁状态
+        studentSelects.forEach(item => item.classList.remove('locked'));
+        pointBtns.forEach(btn => btn.classList.remove('locked'));
+        customInputs.forEach(input => input.classList.remove('locked'));
+        confirmBtns.forEach(btn => btn.classList.remove('locked'));
+        studentItems.forEach(item => item.classList.remove('locked'));
+        totalPoints.forEach(item => item.removeAttribute('data-locked'));
+    }
+}
+      // 确保锁图标状态正确更新
+function updateLockIconState() {
+    const lockIcon = document.getElementById('lock-icon');
+    if (!lockIcon) return;
+    
+    if (isLocked) {
+        lockIcon.textContent = '🔒';
+        lockIcon.classList.remove('unlocked');
+        lockIcon.classList.add('locked');
+    } else {
+        lockIcon.textContent = '🔓';
+        lockIcon.classList.remove('locked');
+        lockIcon.classList.add('unlocked');
+    }
+}
+
+// 在锁定状态变化时调用此函数
+function toggleLockState(locked) {
+    isLocked = locked;
+    updateLockIconState();
+    document.body.classList.toggle('global-locked', isLocked);
+    updateAllLockStates();
+    showToast(isLocked ? '已锁定，所有页面数据无法修改' : '已解锁，可以修改数据');
+}
+
+      // 初始化密码保护功能
+function initPasswordProtection() {
+    // 从本地存储获取密码保护设置
+    passwordProtectionEnabled = localStorage.getItem('studentPointsSystemPasswordProtection') === 'true';
+    if (passwordProtectionEnabled === null) passwordProtectionEnabled = true; // 默认启用
+    password = localStorage.getItem('studentPointsSystemPassword') || '';
+    
+    // 设置密码保护开关初始状态
+    const passwordProtectionToggle = document.getElementById('password-protection-toggle');
+    if (passwordProtectionToggle) {
+        passwordProtectionToggle.checked = passwordProtectionEnabled;
+    }
+    
+    // 更新锁定图标状态
+    updateLockIconState();
+}
+        // Initialize event listeners
+        function init() {
+// 初始化密码保护功能
+initPasswordProtection();
+
+// 获取密码对话框元素
+const passwordDialog = document.getElementById('password-dialog');
+const passwordInput = document.getElementById('password-input');
+const confirmPasswordInput = document.getElementById('confirm-password-input');
+const passwordError = document.getElementById('password-error');
+const passwordDialogTitle = document.getElementById('password-dialog-title');
+const passwordCancelBtn = document.getElementById('password-cancel-btn');
+const passwordConfirmBtn = document.getElementById('password-confirm-btn');
+
+// 设置密码按钮
+const setPasswordBtn = document.getElementById('set-password');
+setPasswordBtn.addEventListener('click', function() {
+    openPasswordDialog('set');
+});
+
+// 密码保护开关
+const passwordProtectionToggle = document.getElementById('password-protection-toggle');
+passwordProtectionToggle.checked = passwordProtectionEnabled;
+passwordProtectionToggle.addEventListener('change', function() {
+    // 如果用户尝试关闭密码保护，且已设置密码，则需要验证密码
+    if (!this.checked && password) {
+        // 阻止开关立即切换
+        this.checked = true;
+        // 打开密码验证对话框
+        openPasswordDialog('verify', 'disable_protection');
+    } else {
+        // 如果是开启密码保护，或者没有设置密码，直接更新状态
+        passwordProtectionEnabled = this.checked;
+        localStorage.setItem('studentPointsSystemPasswordProtection', passwordProtectionEnabled ? 'true' : 'false');
+        showToast(passwordProtectionEnabled ? '已启用密码保护' : '已禁用密码保护');
+    }
+});
+
+// 密码对话框关闭按钮
+document.querySelector('.password-dialog-close').addEventListener('click', closePasswordDialog);
+passwordCancelBtn.addEventListener('click', closePasswordDialog);
+
+// 密码确认按钮
+passwordConfirmBtn.addEventListener('click', handlePasswordConfirm);
+
+// 密码输入框按回车确认
+passwordInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        passwordConfirmBtn.click();
+    }
+});
+confirmPasswordInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        passwordConfirmBtn.click();
+    }
+});  
+          fileUpload.addEventListener('change', handleFileUpload);
+            
+           const uploadBtn = document.getElementById('upload-btn');
+const downloadBtn = document.getElementById('download-btn');
+
+// 上传按钮事件
+uploadBtn.addEventListener('click', () => {
+    fileUpload.click();
+});
+
+// 下载按钮事件
+downloadBtn.addEventListener('click', exportToExcel);
+            
+            homeBtn.addEventListener('click', () => {
+                switchScreen('home');
+            });
+            
+            addPointsBtn.addEventListener('click', () => {
+                switchScreen('add');
+                setupPointsScreen('add');
+            });
+            
+            subtractPointsBtn.addEventListener('click', () => {
+                switchScreen('subtract');
+                setupPointsScreen('subtract');
+            });
+            
+            // Point value buttons in add screen
+            addPointsScreen.querySelectorAll('.point-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectedPointValue = parseInt(btn.dataset.value);
+                    addPointsScreen.querySelectorAll('.point-btn').forEach(b => b.style.backgroundColor = '#F9E2AF');
+                    btn.style.backgroundColor = '#F2CA4B';
+                });
+            });
+            
+            // Point value buttons in subtract screen
+            subtractPointsScreen.querySelectorAll('.point-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectedPointValue = parseInt(btn.dataset.value);
+                    subtractPointsScreen.querySelectorAll('.point-btn').forEach(b => b.style.backgroundColor = '#F9E2AF');
+                    btn.style.backgroundColor = '#F2CA4B';
+                });
+            });
+            // 加分屏幕自定义分值处理
+const addCustomInput = addPointsScreen.querySelector('.point-input');
+const addConfirmYes = addPointsScreen.querySelector('.input-confirm-yes');
+const addConfirmNo = addPointsScreen.querySelector('.input-confirm-no');
+
+addConfirmYes.addEventListener('click', () => {
+    const value = parseInt(addCustomInput.value);
+    if (value && value > 0) {
+        selectedPointValue = value;
+        // 重置所有预设按钮的背景色
+        addPointsScreen.querySelectorAll('.point-btn').forEach(b => b.style.backgroundColor = '#F9E2AF');
+        // 突出显示输入框
+        addCustomInput.style.borderColor = '#F2CA4B';
+        addCustomInput.style.backgroundColor = '#FFF8E1';
+        showToast(`自定义分值：+${value}`);
+    } else {
+        showToast('请输入有效的分值');
+    }
+});
+
+addConfirmNo.addEventListener('click', () => {
+    // 清空输入框并重置样式
+    addCustomInput.value = '';
+    addCustomInput.style.borderColor = '#F9E2AF';
+    addCustomInput.style.backgroundColor = '';
+    // 默认选中+1按钮
+    addPointsScreen.querySelector('.point-btn[data-value="1"]').click();
+});
+
+// 减分屏幕自定义分值处理
+const subtractCustomInput = subtractPointsScreen.querySelector('.point-input');
+const subtractConfirmYes = subtractPointsScreen.querySelector('.input-confirm-yes');
+const subtractConfirmNo = subtractPointsScreen.querySelector('.input-confirm-no');
+
+subtractConfirmYes.addEventListener('click', () => {
+    const value = parseInt(subtractCustomInput.value);
+    if (value && value > 0) {
+        selectedPointValue = value;
+        // 重置所有预设按钮的背景色
+        subtractPointsScreen.querySelectorAll('.point-btn').forEach(b => b.style.backgroundColor = '#F9E2AF');
+        // 突出显示输入框
+        subtractCustomInput.style.borderColor = '#F2CA4B';
+        subtractCustomInput.style.backgroundColor = '#FFF8E1';
+        showToast(`自定义分值：-${value}`);
+    } else {
+        showToast('请输入有效的分值');
+    }
+});
+
+subtractConfirmNo.addEventListener('click', () => {
+    // 清空输入框并重置样式
+    subtractCustomInput.value = '';
+    subtractCustomInput.style.borderColor = '#F9E2AF';
+    subtractCustomInput.style.backgroundColor = '';
+    // 默认选中-1按钮
+    subtractPointsScreen.querySelector('.point-btn[data-value="1"]').click();
+});
+            // Confirm and cancel buttons
+            document.querySelectorAll('.confirm-btn.yes').forEach(btn => {
+                btn.addEventListener('click', confirmPoints);
+            });
+            
+            document.querySelectorAll('.confirm-btn.no').forEach(btn => {
+                btn.addEventListener('click', cancelPoints);
+            });
+            
+            // Make school name editable
+            schoolNameContainer.addEventListener('click', makeSchoolNameEditable);
+            
+            // Check for saved data
+            loadSavedData();
+	      // 在 init() 函数末尾添加这段代码（在 loadSavedData() 之后）
+	function setupAuthorCredit() {
+    const authorElement = document.querySelector('.author-credit');
+    // 一个简单的加密字符串（实际上是 "---本页面申路华老师制作" 的 Base64 编码）
+    const encodedAuthor =  utf8_to_b64("---本页面申路华老师制作");
+    // 解码并显示
+    authorElement.textContent = b64_to_utf8(encodedAuthor);
+    
+    // 防止篡改
+    setInterval(() => {
+        const currentText = document.querySelector('.author-credit').textContent;
+        if (currentText !== b64_to_utf8(encodedAuthor)) {
+            document.querySelector('.author-credit').textContent = b64_to_utf8(encodedAuthor);
+        }
+    }, 2000); // 每2秒检查一次
+}
+// 锁机制
+const lockIcon = document.getElementById('lock-icon');
+
+lockIcon.addEventListener('click', () => {
+    if (!isLocked) {
+        // 当前是解锁状态，点击直接锁定
+        isLocked = true;
+        lockIcon.textContent = '🔒';
+        lockIcon.classList.remove('unlocked');
+        lockIcon.classList.add('locked');
+        showToast('已锁定，所有页面数据无法修改');
+        document.body.classList.add('global-locked');
+        updateAllLockStates();
+    } else {
+        // 当前是锁定状态，需要验证密码才能解锁
+        if (passwordProtectionEnabled && password) {
+            // 启用了密码保护且已设置密码，弹出密码验证
+            openPasswordDialog('verify', 'unlock');
+        } else {
+            // 未启用密码保护或未设置密码，直接解锁
+            isLocked = false;
+            lockIcon.textContent = '🔓';
+            lockIcon.classList.remove('locked');
+            lockIcon.classList.add('unlocked');
+            showToast('已解锁，可以修改数据');
+            document.body.classList.remove('global-locked');
+            updateAllLockStates();
+        }
+    }
+});
+
+          // 为主页学生列表添加点击加分事件
+homeScreen.addEventListener('click', (event) => {
+    const studentItem = event.target.closest('.student-item');
+    if (!studentItem || isLocked) {
+    // 如果是锁定状态，显示提示
+    if (isLocked && studentItem) {
+        showToast('系统已锁定，无法修改积分');
+    }
+    return;
+}
+
+    const studentName = studentItem.querySelector('.student-name');
+    const studentId = studentItem.dataset.studentId;
+    const student = studentData.find(s => s.id === studentId);
+
+    if (student) {
+        // 添加缩小然后恢复的动画效果
+        studentName.style.transition = 'transform 0.3s ease';
+        studentName.style.transform = 'scale(0.8)';
+        
+        // 延迟后恢复原始大小
+        setTimeout(() => {
+            studentName.style.transform = 'scale(1)';
+            
+            // 在动画完成后更新分数
+            setTimeout(() => {
+                student.points += 1;
+                saveData();
+                renderHomeScreen();
+                showToast(`已为 ${student.name} 加1分`);
+            }, 300);
+        }, 300);
+    }
+});
+          // 为总分添加双击编辑功能
+homeScreen.addEventListener('dblclick', (event) => {
+    // 只在未锁定状态下可用
+    if (isLocked) return;
+    
+    // 检查是否点击了总分元素
+    const totalPointsElem = event.target.closest('.total-points');
+    if (!totalPointsElem) return;
+    
+    // 获取组名
+    const groupName = totalPointsElem.dataset.groupName;
+    if (!groupName) return;
+    
+    // 获取当前组对象
+    const group = groupData.find(g => g.name === groupName);
+    if (!group) return;
+    
+    // 阻止事件冒泡
+    event.stopPropagation();
+    
+    // 创建编辑框
+    createGroupPointEditor(totalPointsElem, group);
+});
+// 在 init() 函数末尾调用这个新函数
+setupAuthorCredit();
+          // 初始化锁定状态
+updateAllLockStates();
+          // 设置浮动工具栏
+setupToolbar();
+        }
+        
+        // Make school name editable
+        function makeSchoolNameEditable() {
+            const currentName = schoolNameContainer.textContent;
+            schoolNameContainer.innerHTML = '';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'school-name-edit';
+            input.value = currentName;
+            input.autofocus = true;
+            
+       input.addEventListener('blur', function() {
+    schoolName = input.value.trim() || "学校名称";
+    schoolNameContainer.textContent = schoolName + "学生积分管理系统";
+    saveData();
+});
+            
+     input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        schoolName = input.value.trim() || "学校名称";
+        schoolNameContainer.textContent = schoolName + "学生积分管理系统";
+        saveData();
+    }
+});
+            
+            schoolNameContainer.appendChild(input);
+            input.focus();
+            input.select();
+        }
+        
+        // Show toast message
+        function showToast(message, duration = 2000) {
+            toast.textContent = message;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, duration);
+        }
+        // 创建组积分编辑器
+function createGroupPointEditor(element, group) {
+  // 检查是否处于锁定状态或元素是否被锁定
+if (isLocked || element.getAttribute('data-locked') === 'true') {
+    showToast('系统已锁定，无法修改数据');
+    return;
+}  
+  // 如果有其他编辑器打开，先关闭
+    if (activePointEditor) {
+        document.body.removeChild(activePointEditor);
+        activePointEditor = null;
+    }
+    
+    // 获取元素位置
+    const rect = element.getBoundingClientRect();
+    
+    // 创建编辑框
+    const editor = document.createElement('div');
+    editor.className = 'group-point-edit';
+    editor.innerHTML = `
+        <input type="number" class="group-point-input" value="0" step="1">
+        <div class="group-point-buttons">
+            <button class="group-point-btn group-point-confirm">✓</button>
+            <button class="group-point-btn group-point-cancel">✕</button>
+        </div>
+    `;
+    
+    // 定位编辑框
+    editor.style.left = `${rect.left}px`;
+    editor.style.top = `${rect.bottom + 5}px`;
+    
+    // 添加按钮事件
+    const input = editor.querySelector('.group-point-input');
+    const confirmBtn = editor.querySelector('.group-point-confirm');
+    const cancelBtn = editor.querySelector('.group-point-cancel');
+    
+    // 确认按钮
+    confirmBtn.addEventListener('click', () => {
+        const pointsToAdd = parseInt(input.value);
+        if (isNaN(pointsToAdd)) {
+            showToast('请输入有效的积分值');
+            return;
+        }
+        
+        // 如果输入为0，则不做任何更改
+        if (pointsToAdd === 0) {
+            closeEditor();
+            return;
+        }
+        
+        // 获取组内学生
+        const students = group.students.map(id => studentData.find(s => s.id === id)).filter(s => s);
+        if (students.length === 0) {
+            showToast('该组没有学生');
+            closeEditor();
+            return;
+        }
+        
+        // 为每个学生分配积分
+        let totalAdded = 0;
+        students.forEach(student => {
+            student.points += pointsToAdd;
+            totalAdded += pointsToAdd;
+        });
+        
+        // 保存数据并更新界面
+        saveData();
+        renderHomeScreen();
+        
+        // 显示通知
+        if (pointsToAdd > 0) {
+            showToast(`已为 ${group.name} 组每名学生增加了 ${pointsToAdd} 分，共 ${students.length} 名学生`);
+        } else {
+            showToast(`已为 ${group.name} 组每名学生减少了 ${Math.abs(pointsToAdd)} 分，共 ${students.length} 名学生`);
+        }
+        
+        closeEditor();
+    });
+    
+    // 取消按钮
+    cancelBtn.addEventListener('click', closeEditor);
+    
+    // 点击其他区域关闭
+    document.addEventListener('click', function closeOnClickOutside(e) {
+        if (!editor.contains(e.target) && e.target !== element) {
+            closeEditor();
+            document.removeEventListener('click', closeOnClickOutside);
+        }
+    });
+    
+    // 按ESC键关闭
+    document.addEventListener('keydown', function closeOnEsc(e) {
+        if (e.key === 'Escape') {
+            closeEditor();
+            document.removeEventListener('keydown', closeOnEsc);
+        }
+    });
+    
+    // 输入框按回车确认
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            confirmBtn.click();
+        }
+    });
+    
+    // 关闭编辑器
+    function closeEditor() {
+        if (activePointEditor === editor) {
+            document.body.removeChild(editor);
+            activePointEditor = null;
+        }
+    }
+    
+    // 添加到页面并设置为当前编辑器
+    document.body.appendChild(editor);
+    activePointEditor = editor;
+    
+    // 聚焦输入框并全选内容
+    input.focus();
+    input.select();
+}
+        
+        // Load saved data from localStorage
+        function loadSavedData() {
+            try {
+                const savedData = localStorage.getItem('studentPointsSystem');
+                
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    
+                    if (data && data.studentData && data.groupData && data.className) {
+                        studentData = data.studentData;
+                        groupData = data.groupData;
+                        className = data.className;
+                        schoolName = data.schoolName || "银川路小学";
+                        
+                        // Update UI
+                        schoolNameContainer.textContent = schoolName + "学生积分管理系统";
+                        classBtn.textContent = className;
+                        uploadSection.style.display = 'none';
+                        dataSection.style.display = 'block';
+                        
+                        // Render home screen
+                        renderHomeScreen();
+                        
+                        showToast('已加载保存的数据');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading saved data:', error);
+            }
+        }
+        
+        // Save data to localStorage
+        function saveData() {
+            try {
+                const dataToSave = {
+                    studentData,
+                    groupData,
+                    className,
+                    schoolName
+                };
+                
+                localStorage.setItem('studentPointsSystem', JSON.stringify(dataToSave));
+            } catch (error) {
+                console.error('Error saving data:', error);
+            }
+        }
+        
+        // Handle file upload
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Set class name from file name
+            className = file.name.replace(/\.[^/.]+$/, "");
+            classBtn.textContent = className;
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                
+                // Convert Excel data to usable format
+                processExcelData(worksheet);
+                
+                // Hide upload section, show data section
+                uploadSection.style.display = 'none';
+                dataSection.style.display = 'block';
+                
+                // Render home screen
+                renderHomeScreen();
+                
+                // Save data
+                saveData();
+                
+                const studentsWithPoints = studentData.filter(s => s.points > 0).length;
+if (studentsWithPoints > 0) {
+    showToast(`数据加载成功，已导入${studentsWithPoints}名学生的积分数据`);
+} else {
+    showToast('数据加载成功');
+}
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // Process Excel data considering merged cells for groups
+function processExcelData(worksheet) {
+    // Get all data as array of arrays
+    const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    
+    // Get merged cells info
+    const merges = worksheet['!merges'] || [];
+    
+    studentData = [];
+    groupData = [];
+    let currentGroup = '';
+    
+    // Process rows (starting from 1 to skip header)
+    for (let i = 1; i < rawData.length; i++) {
+        const row = rawData[i];
+        if (!row || row.length < 2) continue;
+        
+        // Check if this row is part of a merged cell for column A
+        const inMergedCell = merges.find(m => 
+            m.s.c === 0 && m.e.c === 0 && // Column A
+            m.s.r <= i && i <= m.e.r      // Current row is within merge range
+        );
+        
+        // 处理组名
+        if (inMergedCell) {
+            // 如果是合并单元格的第一行，设置为当前组
+            if (i === inMergedCell.s.r) {
+                currentGroup = row[0] || '';
+                // 确保组名不为空时才添加新组
+                if (currentGroup) {
+                    groupData.push({
+                        name: currentGroup,
+                        totalPoints: 0,
+                        students: []
+                    });
+                }
+            }
+        } else if (row[0]) {
+            // 非合并单元格且有值
+            currentGroup = row[0];
+            // 确保组名不为空且不重复
+            if (!groupData.some(g => g.name === currentGroup)) {
+                groupData.push({
+                    name: currentGroup,
+                    totalPoints: 0,
+                    students: []
+                });
+            }
+        }
+        
+        // 添加学生到当前组
+if (row[1] && currentGroup) {
+    // 检查是否存在积分数据(第C列，索引为2)
+    let initialPoints = 0;
+    if (row[2] !== undefined && !isNaN(Number(row[2]))) {
+        initialPoints = Number(row[2]);
+    }
+    
+    const student = {
+        id: `student-${studentData.length}`,
+        name: row[1],
+        points: initialPoints, // 使用C列的积分值
+        group: currentGroup
+    };
+    
+    studentData.push(student);
+    
+    // 添加到组的学生数组
+    const groupIndex = groupData.findIndex(g => g.name === currentGroup);
+    if (groupIndex !== -1) {
+        groupData[groupIndex].students.push(student.id);
+    }
+}
+    }
+    
+    // 检查是否有空组并移除
+    groupData = groupData.filter(group => group.name && group.name.trim() !== '');
+// 记录找到的积分数据
+const studentsWithPoints = studentData.filter(s => s.points > 0).length;
+if (studentsWithPoints > 0) {
+    console.log(`已从Excel导入${studentsWithPoints}名学生的积分数据`);
+}
+}
+        // Render home screen with groups and students
+        function renderHomeScreen() {
+            homeScreen.innerHTML = '';
+            
+            groupData.forEach(group => {
+                // Calculate total points for group
+                group.totalPoints = group.students.reduce((total, studentId) => {
+                    const student = studentData.find(s => s.id === studentId);
+                    return total + (student ? student.points : 0);
+                }, 0);
+                
+                const groupElement = document.createElement('div');
+                groupElement.className = 'group';
+                
+                groupElement.innerHTML = `
+    <div class="group-header">
+        <div class="group-name">${group.name}</div>
+        <div class="total-points" data-group-name="${group.name}">总分: ${group.totalPoints}</div>
+    </div>
+                    <div class="student-list">
+                        ${group.students.map(studentId => {
+                            const student = studentData.find(s => s.id === studentId);
+                            if (!student) return '';
+                            
+                            let pointsDisplay = student.points;
+                            if (student.points > 0) pointsDisplay = `+${student.points}`;
+                            else if (student.points === 0) pointsDisplay = "0";
+                            
+                            return `
+    <div class="student-item" data-student-id="${student.id}">
+        <div class="student-name">${student.name}</div>
+        <div class="student-point">${pointsDisplay}</div>
+    </div>
+`;
+                        }).join('')}
+                    </div>
+                `;
+                
+                homeScreen.appendChild(groupElement);
+            });
+        }
+        
+        // Setup points screen (add or subtract)
+        function setupPointsScreen(mode) {
+            currentMode = mode;
+            selectedStudents = [];
+            
+            const targetGrid = mode === 'add' ? addStudentsGrid : subtractStudentsGrid;
+            
+            // Reset point button highlighting
+            const pointsOptions = mode === 'add' ? addPointsScreen : subtractPointsScreen;
+            pointsOptions.querySelectorAll('.point-btn').forEach(btn => {
+                btn.style.backgroundColor = '#F9E2AF';
+            });
+            pointsOptions.querySelector('.point-btn[data-value="1"]').style.backgroundColor = '#F2CA4B';
+            selectedPointValue = 1;
+            // 重置自定义输入框
+const customInput = pointsOptions.querySelector('.point-input');
+if (customInput) {
+    customInput.value = '';
+    customInput.style.borderColor = '#F9E2AF';
+    customInput.style.backgroundColor = '';
+}
+            // Clear and populate the grid
+            targetGrid.innerHTML = '';
+            
+            studentData.forEach(student => {
+                const studentDiv = document.createElement('div');
+                studentDiv.className = 'student-select';
+                studentDiv.dataset.id = student.id;
+                
+                studentDiv.innerHTML = `
+                    <div class="student-name">${student.name}</div>
+                    <div class="student-checkbox"></div>
+                `;
+                
+                // Add click event to select/deselect
+                studentDiv.addEventListener('click', () => {
+                    const checkbox = studentDiv.querySelector('.student-checkbox');
+                    const index = selectedStudents.indexOf(student.id);
+                    
+                    if (index === -1) {
+                        selectedStudents.push(student.id);
+                        checkbox.classList.add('selected');
+                    } else {
+                        selectedStudents.splice(index, 1);
+                        checkbox.classList.remove('selected');
+                    }
+                });
+                
+                targetGrid.appendChild(studentDiv);
+            });
+        }
+        
+        // Confirm points action
+        function confirmPoints() {
+          // 如果处于锁定状态，不允许操作
+if (isLocked) {
+    showToast('系统已锁定，无法修改数据');
+    return;
+}  
+          if (selectedStudents.length === 0) {
+                showToast('请选择至少一名学生');
+                return;
+            }
+            
+            selectedStudents.forEach(studentId => {
+                const student = studentData.find(s => s.id === studentId);
+                if (student) {
+                    if (currentMode === 'add') {
+                        student.points += selectedPointValue;
+                    } else {
+                        student.points -= selectedPointValue;
+                    }
+                }
+            });
+            
+            // Save data
+            saveData();
+            
+            // Show notification
+            const message = currentMode === 'add' 
+                ? `已为${selectedStudents.length}名学生加${selectedPointValue}分` 
+                : `已为${selectedStudents.length}名学生减${selectedPointValue}分`;
+            showToast(message);
+            
+            // Reset selection
+            selectedStudents = [];
+            
+            // Render home screen with updated points
+            renderHomeScreen();
+            
+            // Switch back to home screen
+            switchScreen('home');
+        }
+        
+        // Cancel points action
+        function cancelPoints() {
+            // Reset selection
+            selectedStudents = [];
+            
+            // Show notification
+            showToast('操作已取消');
+            
+            // Switch back to home screen
+            switchScreen('home');
+        }
+        
+        // Switch between screens
+        function switchScreen(screen) {
+            // Update nav buttons
+            homeBtn.classList.remove('active');
+            addPointsBtn.classList.remove('active');
+            subtractPointsBtn.classList.remove('active');
+            
+            // Hide all screens
+            homeScreen.style.display = 'none';
+            addPointsScreen.style.display = 'none';
+            subtractPointsScreen.style.display = 'none';
+            
+            // Show selected screen
+            switch (screen) {
+                case 'home':
+                    homeBtn.classList.add('active');
+                    homeScreen.style.display = 'flex';
+                    break;
+                case 'add':
+                    addPointsBtn.classList.add('active');
+                    addPointsScreen.style.display = 'block';
+                    break;
+                case 'subtract':
+                    subtractPointsBtn.classList.add('active');
+                    subtractPointsScreen.style.display = 'block';
+                    break;
+            }
+          // 切换页面后更新锁定状态
+updateAllLockStates();
+        }
+        // 初始化密码保护功能
+function initPasswordProtection() {
+    // 从本地存储加载密码保护设置
+    const savedProtection = localStorage.getItem('studentPointsSystemPasswordProtection');
+    if (savedProtection !== null) {
+        passwordProtectionEnabled = savedProtection === 'true';
+    }
+    
+    // 从本地存储加载密码
+    password = localStorage.getItem('studentPointsSystemPassword') || '';
+}
+
+
+
+// 关闭密码对话框
+function closePasswordDialog() {
+    passwordDialog.style.display = 'none';
+}
+
+// 处理密码确认
+function handlePasswordConfirm() {
+    const mode = passwordDialog.dataset.mode;
+    
+    if (mode === 'set') {
+        const newPassword = passwordInput.value.trim();
+        const confirmPassword = confirmPasswordInput.value.trim();
+        
+        if (!newPassword) {
+            passwordError.textContent = '请输入密码';
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            passwordError.textContent = '两次输入的密码不一致';
+            return;
+        }
+        
+        // 保存新密码
+        password = newPassword;
+        localStorage.setItem('studentPointsSystemPassword', password);
+        closePasswordDialog();
+        showToast('密码设置成功');
+    }
+    else if (mode === 'verify') {
+        const inputPassword = passwordInput.value.trim();
+        
+        if (inputPassword !== password) {
+            passwordError.textContent = '密码错误';
+            return;
+        }
+        
+        // 密码验证成功
+        closePasswordDialog();
+        
+        // 执行回调函数
+        if (passwordDialog.dataset.callback === 'unlock') {
+            // 解锁操作
+            isLocked = false;
+            lockIcon.textContent = '🔓';
+            lockIcon.classList.remove('locked');
+            lockIcon.classList.add('unlocked');
+            showToast('已解锁，可以修改数据');
+            document.body.classList.remove('global-locked');
+            updateAllLockStates();
+        }
+    }
+}
+        // Initialize the app
+// 浮动工具栏功能
+function setupToolbar() {
+    const pointsButton = document.getElementById('points-button');
+    const seatingButton = document.getElementById('seating-button');
+    const homeworkButton = document.getElementById('homework-button');
+    const mainContent = document.querySelector('.container');
+    const seatingModule = document.getElementById('seating-module');
+    const homeworkModule = document.getElementById('homework-module');
+    
+    // 初始状态：显示积分管理
+    pointsButton.classList.add('active');
+    seatingButton.classList.remove('active');
+    homeworkButton.classList.remove('active');
+    mainContent.style.display = 'block';
+    seatingModule.style.display = 'none';
+    homeworkModule.style.display = 'none';
+    
+    // 点击积分管理按钮
+    pointsButton.addEventListener('click', function() {
+        console.log('点击了积分管理按钮'); // 调试用
+        pointsButton.classList.add('active');
+        seatingButton.classList.remove('active');
+        homeworkButton.classList.remove('active');
+        mainContent.style.display = 'block';
+        seatingModule.style.display = 'none';
+        homeworkModule.style.display = 'none';
+    });
+    
+    // 点击座位调整按钮
+    seatingButton.addEventListener('click', function() {
+        console.log('点击了座位调整按钮'); // 调试用
+        
+        if (!seatingModule.hasChildNodes()) {
+            // 第一次点击时初始化座位调整模块
+            initSeatingModule();
+        }
+        
+        // 更新座位页面的班级名称
+        const schoolClassTitle = document.getElementById('seating-school-class');
+        const classBtn = document.getElementById('class-btn');
+        if (schoolClassTitle && classBtn) {
+            schoolClassTitle.textContent = classBtn.textContent;
+        }
+        
+        seatingButton.classList.add('active');
+        pointsButton.classList.remove('active');
+        homeworkButton.classList.remove('active');
+        mainContent.style.display = 'none';
+        seatingModule.style.display = 'block';
+        homeworkModule.style.display = 'none';
+    });
+    
+    // 点击作业查收按钮
+    homeworkButton.addEventListener('click', function() {
+        console.log('点击了作业查收按钮'); // 调试用
+        
+        if (!homeworkModule.hasChildNodes()) {
+            // 第一次点击时初始化作业查收模块
+            initHomeworkModule();
+        }
+        
+        homeworkButton.classList.add('active');
+        pointsButton.classList.remove('active');
+        seatingButton.classList.remove('active');
+        mainContent.style.display = 'none';
+        seatingModule.style.display = 'none';
+        homeworkModule.style.display = 'block';
+    });
+}
+
+// 初始化座位调整模块
+function initSeatingModule() {
+    const seatingModule = document.getElementById('seating-module');
+    
+    // 这里插入附件2的HTML结构
+    seatingModule.innerHTML = `
+    <div class="header">
+        <div class="decoration">
+            <svg width="80" height="80" viewBox="0 0 200 200">
+                <rect x="40" y="120" width="120" height="20" fill="#3273dc" />
+                <rect x="40" y="150" width="120" height="20" fill="#209cee" />
+                <rect x="70" y="50" width="20" height="100" fill="#3273dc" />
+                <circle cx="150" cy="60" r="30" fill="#ff3860" />
+                <path d="M150 30 L160 50 L180 50 L165 65 L170 85 L150 75 L130 85 L135 65 L120 50 L140 50 Z" fill="#00d1b2" />
+            </svg>
+        </div>
+        <h1>某某某小学 三年级二班</h1>
+        <h2>座位表</h2>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <button id="resetBtn">重置座位</button>
+            <button id="randomBtn">随机排列</button>
+            <button id="saveBtn">保存布局</button>
+        </div>
+        
+        <div class="classroom">
+            <div class="podium">讲台</div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+    <div class="notification" id="notification"></div>
+    `;
+    
+    // 添加座位调整模块的CSS样式
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        #seating-module .header {
+            background-color: rgba(57, 198, 170, 0.9);
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #seating-module .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        #seating-module .header h2 {
+            margin: 5px 0 0 0;
+        }
+
+      
+
+        #seating-module .container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 80px);
+            padding: 20px;
+        }
+
+        #seating-module .classroom {
+            flex: 1;
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        #seating-module .podium {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 60px;
+            background-color: #43c6ac;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5em;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #seating-module .student {
+            position: absolute;
+            width: 100px;
+            height: 40px;
+            background-color: #ffbb33;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+
+        #seating-module .student:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        #seating-module .student:active {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        #seating-module .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+
+        #seating-module button {
+            padding: 10px 20px;
+            background-color: #43c6ac;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #seating-module button:hover {
+            background-color: #2ebb92;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #seating-module button:active {
+            transform: scale(0.95);
+        }
+
+        #seating-module .tooltip {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            z-index: 100;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+
+        #seating-module .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(57, 198, 170, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: opacity 0.5s, transform 0.5s;
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+    `;
+    document.head.appendChild(styleElement);
+    
+    // 现在添加座位调整模块的JavaScript功能
+    initSeatingScript();
+}
+
+// 初始化座位调整模块的JavaScript功能
+function initSeatingScript() {
+    // 学生数据
+    const students = [
+        { name: '甄优秀', row: 1, col: 1 },
+        { name: '李小龙', row: 1, col: 2 },
+        { name: '贾宝玉', row: 1, col: 3 },
+        { name: '令狐冲', row: 1, col: 4 },
+        { name: '段誉', row: 1, col: 5 },
+        { name: '林黛玉', row: 1, col: 6 },
+        { name: '甄优秀', row: 2, col: 1 },
+        { name: '李小龙', row: 2, col: 2 },
+        { name: '贾宝玉', row: 2, col: 3 },
+        { name: '令狐冲', row: 2, col: 4 },
+        { name: '段誉', row: 2, col: 5 },
+        { name: '林黛玉', row: 2, col: 6 },
+        { name: '甄优秀', row: 3, col: 1 },
+        { name: '李小龙', row: 3, col: 2 },
+        { name: '贾宝玉', row: 3, col: 3 },
+        { name: '令狐冲', row: 3, col: 4 },
+        { name: '段誉', row: 3, col: 5 },
+        { name: '林黛玉', row: 3, col: 6 },
+        { name: '甄优秀', row: 4, col: 1 },
+        { name: '李小龙', row: 4, col: 2 },
+        { name: '贾宝玉', row: 4, col: 3 },
+        { name: '令狐冲', row: 4, col: 4 },
+        { name: '段誉', row: 4, col: 5 },
+        { name: '林黛玉', row: 4, col: 6 },
+        { name: '甄优秀', row: 5, col: 1 },
+        { name: '李小龙', row: 5, col: 2 },
+        { name: '贾宝玉', row: 5, col: 3 },
+        { name: '令狐冲', row: 5, col: 4 },
+        { name: '段誉', row: 5, col: 5 },
+        { name: '林黛玉', row: 5, col: 6 },
+        { name: '甄优秀', row: 6, col: 1 },
+        { name: '李小龙', row: 6, col: 2 },
+        { name: '贾宝玉', row: 6, col: 3 },
+        { name: '令狐冲', row: 6, col: 4 },
+        { name: '段誉', row: 6, col: 5 },
+        { name: '林黛玉', row: 6, col: 6 },
+        { name: '甄优秀', row: 7, col: 1 },
+        { name: '李小龙', row: 7, col: 2 },
+        { name: '贾宝玉', row: 7, col: 3 },
+        { name: '令狐冲', row: 7, col: 4 },
+        { name: '段誉', row: 7, col: 5 },
+        { name: '林黛玉', row: 7, col: 6 },
+    ];
+
+    // 记录原始位置
+    const originalPositions = [];
+    
+    // DOM元素
+    const classroom = document.querySelector('#seating-module .classroom');
+    const tooltip = document.querySelector('#seating-module .tooltip');
+    const notification = document.querySelector('#seating-module .notification');
+    const resetBtn = document.querySelector('#seating-module #resetBtn');
+    const randomBtn = document.querySelector('#seating-module #randomBtn');
+    const saveBtn = document.querySelector('#seating-module #saveBtn');
+
+    // 当前拖动的元素
+    let draggedElement = null;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // 显示通知
+    function showNotification(message) {
+        notification.textContent = message;
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateY(0)';
+        
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-20px)';
+        }, 3000);
+    }
+
+    // 初始化学生位置
+    function initializeStudents() {
+        // 清空教室
+        const existingStudents = document.querySelectorAll('#seating-module .student');
+        existingStudents.forEach(student => student.remove());
+        
+        // 获取教室尺寸
+        const classroomWidth = classroom.clientWidth;
+        const classroomHeight = classroom.clientHeight;
+        
+        // 计算每个位置的宽度和高度
+        const colWidth = classroomWidth / 7;
+        const rowHeight = classroomHeight / 8;
+        
+        // 创建学生元素
+        students.forEach((student, index) => {
+            const studentElement = document.createElement('div');
+            studentElement.className = 'student';
+            studentElement.textContent = student.name;
+            studentElement.dataset.index = index;
+            
+            // 设置学生元素的位置
+            const left = colWidth * student.col;
+            const top = rowHeight * student.row;
+            
+            studentElement.style.left = `${left - 50}px`; // 居中
+            studentElement.style.top = `${top - 20}px`; // 居中
+            
+            // 随机颜色 (保持亮色调)
+            const hue = Math.floor(Math.random() * 360);
+            const saturation = 70 + Math.floor(Math.random() * 30);
+            const lightness = 70 + Math.floor(Math.random() * 20);
+            studentElement.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            
+            // 根据背景颜色决定文字颜色
+            studentElement.style.color = lightness < 80 ? 'white' : 'black';
+            
+            // 添加到教室
+            classroom.appendChild(studentElement);
+            
+            // 记录原始位置
+            originalPositions[index] = { left, top };
+            
+            // 添加拖动事件
+            setupDragEvents(studentElement);
+        });
+        
+        showNotification('座位已初始化，可以拖动调整位置');
+    }
+
+    // 重置座位
+    function resetSeating() {
+        const studentElements = document.querySelectorAll('#seating-module .student');
+        
+        studentElements.forEach(student => {
+            const index = parseInt(student.dataset.index);
+            const position = originalPositions[index];
+            
+            student.style.left = `${position.left - 50}px`;
+            student.style.top = `${position.top - 20}px`;
+        });
+        
+        showNotification('座位已重置为初始布局');
+    }
+
+    // 随机排列
+    function randomizeSeating() {
+        const studentElements = Array.from(document.querySelectorAll('#seating-module .student'));
+        
+        // 随机排列学生
+        for (let i = studentElements.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            
+            // 交换位置
+            const tempLeft = studentElements[i].style.left;
+            const tempTop = studentElements[i].style.top;
+            
+            studentElements[i].style.left = studentElements[j].style.left;
+            studentElements[i].style.top = studentElements[j].style.top;
+            
+            studentElements[j].style.left = tempLeft;
+            studentElements[j].style.top = tempTop;
+        }
+        
+        showNotification('座位已随机排列');
+    }
+
+    // 保存布局
+    function saveLayout() {
+        const layout = [];
+        const studentElements = document.querySelectorAll('#seating-module .student');
+        
+        studentElements.forEach(student => {
+            layout.push({
+                name: student.textContent,
+                left: student.style.left,
+                top: student.style.top
+            });
+        });
+        
+        // 保存到本地存储
+        localStorage.setItem('classroomLayout', JSON.stringify(layout));
+        
+        showNotification('座位布局已保存');
+    }
+
+    // 设置拖动事件
+    function setupDragEvents(element) {
+        element.addEventListener('mousedown', startDrag);
+        element.addEventListener('touchstart', startDrag, { passive: false });
+        
+        element.addEventListener('mouseover', (e) => {
+            tooltip.textContent = `拖动调整 ${element.textContent} 的位置`;
+            tooltip.style.opacity = '1';
+            tooltip.style.left = `${e.clientX + 10}px`;
+            tooltip.style.top = `${e.clientY + 10}px`;
+        });
+        
+        element.addEventListener('mouseout', () => {
+            tooltip.style.opacity = '0';
+        });
+    }
+
+    // 开始拖动
+    function startDrag(e) {
+        e.preventDefault();
+        
+        draggedElement = this;
+        
+        // 添加正在拖动的类
+        draggedElement.classList.add('dragging');
+        
+        // 计算鼠标与元素的偏移
+        if (e.type === 'mousedown') {
+            offsetX = e.clientX - draggedElement.getBoundingClientRect().left;
+            offsetY = e.clientY - draggedElement.getBoundingClientRect().top;
+        } else {
+            const touch = e.touches[0];
+            offsetX = touch.clientX - draggedElement.getBoundingClientRect().left;
+            offsetY = touch.clientY - draggedElement.getBoundingClientRect().top;
+        }
+        
+        // 添加移动和结束事件
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('touchmove', drag, { passive: false });
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+    }
+
+    // 拖动中
+    function drag(e) {
+        e.preventDefault();
+        
+        if (!draggedElement) return;
+        
+        let clientX, clientY;
+        
+        if (e.type === 'mousemove') {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        } else {
+            const touch = e.touches[0];
+            clientX = touch.clientX;
+            clientY = touch.clientY;
+        }
+        
+        // 获取教室元素的位置
+        const classroomRect = classroom.getBoundingClientRect();
+        
+        // 计算新位置
+        let left = clientX - classroomRect.left - offsetX;
+        let top = clientY - classroomRect.top - offsetY;
+        
+        // 限制在教室内
+        left = Math.max(0, Math.min(left, classroomRect.width - draggedElement.offsetWidth));
+        top = Math.max(0, Math.min(top, classroomRect.height - draggedElement.offsetHeight));
+        
+        // 设置新位置
+        draggedElement.style.left = `${left}px`;
+        draggedElement.style.top = `${top}px`;
+        
+        // 更新提示
+        tooltip.style.left = `${clientX + 10}px`;
+        tooltip.style.top = `${clientY + 10}px`;
+    }
+
+    // 结束拖动
+    function endDrag() {
+        if (!draggedElement) return;
+        
+        // 移除正在拖动的类
+        draggedElement.classList.remove('dragging');
+        
+        // 重置
+        draggedElement = null;
+        
+        // 移除事件监听
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('touchmove', drag);
+        document.removeEventListener('mouseup', endDrag);
+        document.removeEventListener('touchend', endDrag);
+        
+        // 隐藏提示
+        tooltip.style.opacity = '0';
+    }
+
+    // 加载已保存的布局
+    function loadSavedLayout() {
+        const saved = localStorage.getItem('classroomLayout');
+        
+        if (saved) {
+            const layout = JSON.parse(saved);
+            const studentElements = document.querySelectorAll('#seating-module .student');
+            
+            if (studentElements.length === layout.length) {
+                layout.forEach((item, index) => {
+                    studentElements[index].style.left = item.left;
+                    studentElements[index].style.top = item.top;
+                });
+                
+                showNotification('已加载保存的座位布局');
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    // 按钮点击效果
+    function setupButtonEffects() {
+        const buttons = document.querySelectorAll('#seating-module button');
+        
+        buttons.forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.style.transform = 'scale(0.95)';
+            });
+            
+            button.addEventListener('mouseup', () => {
+                setTimeout(() => {
+                    button.style.transform = 'scale(1)';
+                }, 100);
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = 'scale(1)';
+            });
+        });
+    }
+
+    // 初始化
+    resetBtn.addEventListener('click', resetSeating);
+    randomBtn.addEventListener('click', randomizeSeating);
+    saveBtn.addEventListener('click', saveLayout);
+
+    // 设置按钮效果
+    setupButtonEffects();
+
+    // 初始化学生位置
+    initializeStudents();
+
+    // 尝试加载保存的布局
+    if (!loadSavedLayout()) {
+        showNotification('欢迎使用座位调整工具！拖动姓名卡片可调整座位');
+    }
+}
+      // 初始化作业查收模块
+function initHomeworkModule() {
+    const homeworkModule = document.getElementById('homework-module');
+    
+    homeworkModule.innerHTML = `
+    <div class="homework-header">
+        <h1>作业查收</h1>
+        <div class="homework-back-btn" id="homework-back-to-points">返回积分管理</div>
+    </div>
+
+    <div class="homework-stats" id="homework-stats">
+        <h3>作业统计</h3>
+        <div class="stats-item">
+            <div class="stats-number stats-submitted" id="submitted-count">0</div>
+            <div>已提交</div>
+        </div>
+        <div class="stats-item">
+            <div class="stats-number stats-pending" id="pending-count">0</div>
+            <div>未提交</div>
+        </div>
+    </div>
+
+    <div class="homework-controls">
+        <button id="reset-homework-btn" class="homework-btn">重置全部</button>
+        <button id="show-pending-btn" class="homework-btn">显示未交</button>
+        <button id="show-all-btn" class="homework-btn">显示全部</button>
+    </div>
+    
+    <div class="homework-cards-container" id="homework-cards-container">
+        <!-- 学生卡片将在这里生成 -->
+    </div>
+
+    <div class="homework-notification" id="homework-notification"></div>
+    `;
+    
+    // 初始化作业查收功能
+    initHomeworkScript();
+}
+
+// 作业查收模块的JavaScript功能
+function initHomeworkScript() {
+    // DOM元素
+    const homeworkBackBtn = document.getElementById('homework-back-to-points');
+    const resetHomeworkBtn = document.getElementById('reset-homework-btn');
+    const showPendingBtn = document.getElementById('show-pending-btn');
+    const showAllBtn = document.getElementById('show-all-btn');
+    const homeworkCardsContainer = document.getElementById('homework-cards-container');
+    const homeworkNotification = document.getElementById('homework-notification');
+    const submittedCountEl = document.getElementById('submitted-count');
+    const pendingCountEl = document.getElementById('pending-count');
+    
+    // 作业提交状态数据
+    let homeworkStatus = {};
+    
+    // 从学生数据获取学生列表
+    function getStudentsForHomework() {
+        if (studentData && studentData.length > 0) {
+            return studentData.map(student => ({
+                id: student.id,
+                name: student.name,
+                group: student.group || '未分组'
+            }));
+        } else {
+            // 示例数据
+            const demoNames = ['张三', '李四', '王五', '赵六', '钱七', '孙八', 
+                             '周九', '吴十', '郑十一', '王十二', '赵十三', '钱十四'];
+            return demoNames.map((name, index) => ({
+                id: `demo-${index}`,
+                name: name,
+                group: `第${Math.floor(index / 4) + 1}组`
+            }));
+        }
+    }
+    
+    // 显示通知
+    function showHomeworkNotification(message, duration = 3000) {
+        homeworkNotification.textContent = message;
+        homeworkNotification.style.opacity = '1';
+        homeworkNotification.style.transform = 'translateX(-50%) translateY(0)';
+        
+        clearTimeout(homeworkNotification.timer);
+        homeworkNotification.timer = setTimeout(() => {
+            homeworkNotification.style.opacity = '0';
+            homeworkNotification.style.transform = 'translateX(-50%) translateY(-20px)';
+        }, duration);
+    }
+    
+    // 更新统计信息
+    function updateStats() {
+        const students = getStudentsForHomework();
+        const submittedCount = students.filter(student => homeworkStatus[student.id] === 'submitted').length;
+        const pendingCount = students.length - submittedCount;
+        
+        submittedCountEl.textContent = submittedCount;
+        pendingCountEl.textContent = pendingCount;
+    }
+    
+    // 创建学生作业卡片
+    function createHomeworkCard(student) {
+        const card = document.createElement('div');
+        card.className = 'student-homework-card';
+        card.dataset.studentId = student.id;
+        card.dataset.status = homeworkStatus[student.id] || 'pending';
+        
+        // 根据组别设置不同的背景色
+        let bgColor = '#ffffff';
+        if (student.group && student.group !== '未分组') {
+            const hash = hashString(student.group);
+            const hue = hash % 360;
+            bgColor = `hsl(${hue}, 30%, 95%)`;
+            card.style.borderLeft = `4px solid hsl(${hue}, 70%, 60%)`;
+        }
+        card.style.backgroundColor = bgColor;
+        
+        card.innerHTML = `
+            <div class="homework-card-name">${student.name}</div>
+            <div class="homework-card-status">${student.group}</div>
+        `;
+        
+        // 点击卡片事件
+        card.addEventListener('click', function() {
+            if (homeworkStatus[student.id] === 'submitted') {
+                // 如果已经提交过，不再处理
+                showHomeworkNotification(`${student.name} 的作业已经查收过了`);
+                return;
+            }
+            
+            // 标记为已提交
+            homeworkStatus[student.id] = 'submitted';
+            
+            // 添加溶解动画
+            card.classList.add('dissolving');
+            
+            // 动画完成后隐藏卡片
+            setTimeout(() => {
+                card.classList.add('disappeared');  /* 改用CSS类而不是display:none */
+                updateStats();
+                
+                // 检查是否所有作业都已查收
+                const students = getStudentsForHomework();
+                const allSubmitted = students.every(s => homeworkStatus[s.id] === 'submitted');
+                if (allSubmitted) {
+                    showHomeworkNotification('🎉 所有同学的作业都已查收完毕！', 5000);
+                } else {
+                    showHomeworkNotification(`✓ ${student.name} 的作业已查收`);
+                }
+            }, 1000);
+            
+            // 保存状态到本地存储
+            saveHomeworkStatus();
+        });
+        
+        return card;
+    }
+    
+ // 渲染所有学生卡片
+function renderHomeworkCards(filter = 'all') {
+    homeworkCardsContainer.innerHTML = '';
+    const students = getStudentsForHomework();
+    
+    // 始终渲染所有学生，不进行过滤
+    students.forEach(student => {
+        const card = createHomeworkCard(student);
+        
+        // 根据筛选条件和提交状态决定显示效果
+        if (filter === 'pending') {
+            if (homeworkStatus[student.id] === 'submitted') {
+                // 已提交的学生：完全透明且不可点击
+                card.style.opacity = '0.2';
+                card.style.pointerEvents = 'none';
+                card.style.filter = 'grayscale(100%)';
+            } else {
+                // 未提交的学生：正常显示
+                card.style.opacity = '1';
+                card.style.pointerEvents = 'auto';
+                card.style.filter = 'none';
+            }
+        } else {
+            // 显示全部时：正常显示所有学生
+            card.style.opacity = '1';
+            card.style.pointerEvents = 'auto';
+            card.style.filter = 'none';
+        }
+        
+        homeworkCardsContainer.appendChild(card);
+    });
+    
+    updateStats();
+    
+    // 检查是否所有学生都已提交（仅在显示未提交时显示提示）
+    if (filter === 'pending') {
+        const pendingStudents = students.filter(student => homeworkStatus[student.id] !== 'submitted');
+        if (pendingStudents.length === 0) {
+            // 在容器末尾添加完成提示
+            const completionDiv = document.createElement('div');
+            completionDiv.style.cssText = `
+                grid-column: 1 / -1; 
+                text-align: center; 
+                color: #4CAF50; 
+                font-size: 18px; 
+                padding: 20px;
+                background: rgba(76, 175, 80, 0.1);
+                border-radius: 10px;
+                margin-top: 20px;
+            `;
+            completionDiv.textContent = '🎉 所有同学都已提交作业！';
+            homeworkCardsContainer.appendChild(completionDiv);
+        }
+    }
+}
+    
+    // 哈希函数（用于生成组别颜色）
+    function hashString(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash);
+    }
+    
+    // 保存作业状态到本地存储
+    function saveHomeworkStatus() {
+        try {
+            const className = window.className || 'default';
+            localStorage.setItem(`homework_status_${className}`, JSON.stringify(homeworkStatus));
+        } catch (error) {
+            console.error('保存作业状态失败:', error);
+        }
+    }
+    
+    // 从本地存储加载作业状态
+    function loadHomeworkStatus() {
+        try {
+            const className = window.className || 'default';
+            const saved = localStorage.getItem(`homework_status_${className}`);
+            if (saved) {
+                homeworkStatus = JSON.parse(saved);
+                showHomeworkNotification('已加载之前的作业查收记录');
+            }
+        } catch (error) {
+            console.error('加载作业状态失败:', error);
+            homeworkStatus = {};
+        }
+    }
+    
+    // 事件监听器
+    homeworkBackBtn.addEventListener('click', () => {
+        document.getElementById('points-button').click();
+    });
+    
+    resetHomeworkBtn.addEventListener('click', () => {
+        if (confirm('确定要重置所有作业状态吗？这将清除所有查收记录。')) {
+            homeworkStatus = {};
+            saveHomeworkStatus();
+            renderHomeworkCards();
+            showHomeworkNotification('已重置所有作业状态');
+        }
+    });
+    
+    showPendingBtn.addEventListener('click', () => {
+        renderHomeworkCards('pending');
+        showHomeworkNotification('显示未提交作业的同学');
+    });
+    
+    showAllBtn.addEventListener('click', () => {
+        renderHomeworkCards('all');
+        showHomeworkNotification('显示所有同学');
+    });
+    
+    // 初始化
+    loadHomeworkStatus();
+    renderHomeworkCards();
+    showHomeworkNotification('作业查收功能已准备就绪');
+}
+      // 导出数据到Excel
+function exportToExcel() {
+    // 创建工作簿
+    const wb = XLSX.utils.book_new();
+    
+    // 准备数据
+    const data = [];
+    
+    // 添加表头
+    data.push(["组别", "姓名", "得分"]);
+    
+    // 添加学生数据
+    studentData.forEach(student => {
+        data.push([student.group, student.name, student.points]);
+    });
+    
+    // 创建工作表
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    
+    // 将工作表添加到工作簿
+    XLSX.utils.book_append_sheet(wb, ws, "学生得分");
+    
+    // 生成文件名
+    const fileName = `${className || '学生'}_积分统计_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`;
+    
+    // 导出文件
+    XLSX.writeFile(wb, fileName);
+    
+    showToast('文件导出成功');
+}
+   init();
+    // 初始化座位调整模块
+function initSeatingModule() {
+    const seatingModule = document.getElementById('seating-module');
+    
+    // 创建座位调整的HTML结构
+    seatingModule.innerHTML = `
+    <div class="seating-header">
+        <h1 id="seating-school-class"></h1>
+        <h2>座位表</h2>
+        <div class="seating-back-btn" id="back-to-points">返回积分管理</div>
+    </div>
+
+    <div class="seating-container">
+        <div class="seating-controls">
+            <button id="resetBtn" class="seating-btn">重置座位</button>
+            <button id="randomBtn" class="seating-btn">随机排列</button>
+            <button id="saveBtn" class="seating-btn">保存布局</button>
+            <button id="rowColBtn" class="seating-btn">调整行列数</button>
+        </div>
+        
+        <div class="row-col-settings" id="rowColSettings">
+            <div class="setting-item">
+                <label>行数:</label>
+                <input type="number" id="rowInput" min="1" max="10" value="6">
+            </div>
+            <div class="setting-item">
+                <label>列数:</label>
+                <input type="number" id="colInput" min="1" max="10" value="6">
+            </div>
+            <button id="applySettings" class="seating-btn apply-btn">应用</button>
+        </div>
+        
+        <div class="classroom">
+            <div class="podium">讲台</div>
+            <div id="student-container" class="student-container"></div>
+        </div>
+    </div>
+
+   <div class="seating-tooltip" id="seating-tooltip"></div>
+<div class="alignment-lines">
+    <div class="h-line" id="horizontal-line"></div>
+    <div class="v-line" id="vertical-line"></div>
+</div>
+<div class="seating-notification" id="seating-notification"></div>
+    `;
+    
+    // 添加座位调整模块的CSS样式
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        #seating-module {
+            font-family: "Microsoft YaHei", sans-serif;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(-45deg, #f8f9fa, #e9ecef, #dee2e6, #ced4da);
+            background-size: 400% 400%;
+            animation: seating-gradient 15s ease infinite;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        @keyframes seating-gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .seating-header {
+            background-color: rgba(57, 192, 237, 0.9);
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .seating-header h1 {
+            margin: 0;
+            font-size: 2em;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .seating-header h2 {
+            margin: 5px 0 0 0;
+            font-size: 1.5em;
+        }
+
+        .seating-header .decoration {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+        }
+        
+        .seating-back-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .seating-back-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .seating-back-btn:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        .seating-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px);
+            padding: 20px;
+        }
+
+        .seating-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .row-col-settings {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 10px 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .setting-item input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .apply-btn {
+            background-color: #4CAF50 !important;
+        }
+
+        .classroom {
+            flex: 1;
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .student-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding-bottom: 70px; /* 为讲台留出空间 */
+        }
+
+       .podium {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 50px;
+    background-color: #39c0ed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 1.5em;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 5;
+}
+
+.student-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding-top: 70px; /* 为讲台留出空间 */
+}
+
+        .student-desk {
+            position: absolute;
+            width: 100px;
+            height: 45px;
+            background-color: #ffdb58;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 5px;
+        }
+
+        .student-desk:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+        }
+
+        .student-desk:active {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .student-desk.dragging {
+            opacity: 0.8;
+            z-index: 30;
+        }
+
+        .seating-btn {
+            padding: 10px 20px;
+            background-color: #39c0ed;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .seating-btn:hover {
+            background-color: #2daed6;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .seating-btn:active {
+            transform: scale(0.95);
+        }
+
+        .seating-tooltip {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            z-index: 100;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            opacity: 0;
+            font-size: 14px;
+        }
+
+        .seating-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(57, 192, 237, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transition: opacity 0.5s, transform 0.5s;
+            opacity: 0;
+            text-align: center;
+            max-width: 80%;
+        }
+        .alignment-lines {
+    position: absolute;
+    pointer-events: none;
+    z-index: 90;
+}
+
+.h-line, .v-line {
+    position: absolute;
+    background-color: rgba(0, 120, 255, 0.6);
+    display: none;
+}
+
+.h-line {
+    height: 2px;
+    width: 100%;
+    left: 0;
+}
+
+.v-line {
+    width: 2px;
+    height: 100%;
+    top: 0;
+}
+        
+        @media (max-width: 768px) {
+            .seating-controls {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .seating-btn {
+                width: 90%;
+                max-width: 200px;
+            }
+            
+            .student-desk {
+                width: 80px;
+                height: 40px;
+                font-size: 14px;
+            }
+            
+            .row-col-settings {
+                flex-direction: column;
+                padding: 15px;
+            }
+        }
+   .student-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-gap: 10px;
+    padding: 20px;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .student-container {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    }
+}
+    `;
+    document.head.appendChild(styleElement);
+    
+    // 初始化座位调整模块的JavaScript功能
+    initSeatingScript();
+}
+
+// 初始化座位调整模块的JavaScript功能
+function initSeatingScript() {
+    // DOM元素
+    const classroom = document.querySelector('.classroom');
+    const studentContainer = document.getElementById('student-container');
+    const tooltip = document.getElementById('seating-tooltip');
+    const notification = document.getElementById('seating-notification');
+    const resetBtn = document.getElementById('resetBtn');
+    const randomBtn = document.getElementById('randomBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const horizontalLine = document.getElementById('horizontal-line');
+    const verticalLine = document.getElementById('vertical-line');
+    const backToPointsBtn = document.getElementById('back-to-points');
+    const rowColBtn = document.getElementById('rowColBtn');
+    const rowColSettings = document.getElementById('rowColSettings');
+    const rowInput = document.getElementById('rowInput');
+    const colInput = document.getElementById('colInput');
+    const applySettings = document.getElementById('applySettings');
+    const schoolClassTitle = document.getElementById('seating-school-class');
+    
+    // 直接使用全局变量中的班级名称
+    const globalClassName = className || "班级"; // 使用全局变量className
+    schoolClassTitle.textContent = globalClassName;
+    
+    // 添加一个监听器来更新班级名称（以防班级名称在座位调整期间被更改）
+    function updateClassName() {
+        const classBtn = document.getElementById('class-btn');
+        if (classBtn && classBtn.textContent) {
+            schoolClassTitle.textContent = classBtn.textContent;
+        }
+    }
+    
+    // 初始尝试更新一次
+    updateClassName();
+    
+    // 配置
+    let config = {
+        rows: 6,
+        cols: 6,
+        deskWidth: 100,
+        deskHeight: 45,
+        gapX: 20,
+        gapY: 20
+    };
+    
+    // 存储当前的学生位置数据
+    let studentPositions = [];
+    
+    // 当前拖动的元素
+    let draggedElement = null;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    // 显示通知
+    function showNotification(message, duration = 3000) {
+        notification.textContent = message;
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(-50%) translateY(0)';
+        
+        clearTimeout(notification.timer);
+        notification.timer = setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(-50%) translateY(-20px)';
+        }, duration);
+    }
+    
+    // 从积分管理系统获取学生数据
+   function getStudentsFromPointSystem() {
+    let students = [];
+    
+    // 直接从全局变量studentData获取数据（不使用window.前缀）
+    if (studentData && studentData.length > 0) {
+        // 按组别对学生进行排序
+        const studentsGrouped = {};
+        
+        studentData.forEach(student => {
+            if (!studentsGrouped[student.group]) {
+                studentsGrouped[student.group] = [];
+            }
+            studentsGrouped[student.group].push({
+                id: student.id,
+                name: student.name,
+                points: student.points,
+                group: student.group
+            });
+        });
+        
+        // 将分组后的学生转换成数组并设置初始行列位置
+        let studentIndex = 0;
+        Object.keys(studentsGrouped).forEach(groupName => {
+            studentsGrouped[groupName].forEach(student => {
+                // 计算行列位置以便整齐布局
+                const row = Math.floor(studentIndex / config.cols) + 1;
+                const col = studentIndex % config.cols + 1;
+                
+                students.push({
+                    id: student.id,
+                    name: student.name,
+                    points: student.points,
+                    group: student.group,
+                    row: row,
+                    col: col
+                });
+                
+                studentIndex++;
+            });
+        });
+        
+        showNotification('已从积分系统导入' + students.length + '名学生数据');
+        return students;
+    } else {
+        // 如果没有学生数据，创建示例数据
+        const demoNames = ['张三', '李四', '王五', '赵六', '钱七', '孙八', 
+                         '周九', '吴十', '郑十一', '王十二', '赵十三', '钱十四',
+                         '孙十五', '周十六', '吴十七', '郑十八', '王十九', '赵二十',
+                         '钱二一', '孙二二', '周二三', '吴二四', '郑二五', '王二六'];
+                         
+        for (let i = 0; i < Math.min(36, demoNames.length); i++) {
+            students.push({
+                id: `demo-${i}`,
+                name: demoNames[i],
+                row: Math.floor(i / config.cols) + 1,
+                col: i % config.cols + 1
+            });
+        }
+        
+        showNotification('未找到积分系统学生数据，使用示例数据', 5000);
+        return students;
+    }
+}
+    
+   // 计算学生位置
+function calculatePositions(students) {
+    const classroomWidth = studentContainer.clientWidth;
+    const classroomHeight = studentContainer.clientHeight;
+    
+    // 添加讲台的偏移量（从顶部留出空间）
+    const podiumOffset = 70; // 讲台高度加一些额外空间
+    
+    // 计算单元格大小
+    const cellWidth = (classroomWidth - (config.cols + 1) * config.gapX) / config.cols;
+    const cellHeight = ((classroomHeight - podiumOffset) - (config.rows + 1) * config.gapY) / config.rows;
+    
+    // 更新桌子尺寸，确保不超过单元格大小
+    config.deskWidth = Math.min(cellWidth - 10, 100);
+    config.deskHeight = Math.min(cellHeight - 10, 45);
+    
+    return students.map((student, index) => {
+        // 确保行列在有效范围内
+        const row = Math.min(student.row || 1, config.rows);
+        const col = Math.min(student.col || 1, config.cols);
+        
+        // 计算中心位置
+        const centerX = config.gapX + (col - 1) * (cellWidth + config.gapX) + cellWidth / 2;
+        // 添加讲台的偏移量到Y坐标
+        const centerY = podiumOffset + config.gapY + (row - 1) * (cellHeight + config.gapY) + cellHeight / 2;
+        
+        // 计算左上角位置
+        const left = centerX - config.deskWidth / 2;
+        const top = centerY - config.deskHeight / 2;
+        
+        return {
+            ...student,
+            left,
+            top,
+            row,
+            col
+        };
+    });
+}
+    
+    // 渲染学生座位
+  function renderStudents() {
+    // 清空容器
+    studentContainer.innerHTML = '';
+    
+    // 获取学生数据并计算位置
+    const students = getStudentsFromPointSystem();
+    
+    // 如果学生太多，自动调整行列数
+    if (students.length > config.rows * config.cols) {
+        // 计算新的行列数
+        config.cols = Math.ceil(Math.sqrt(students.length));
+        config.rows = Math.ceil(students.length / config.cols);
+        
+        // 更新输入值
+        rowInput.value = config.rows;
+        colInput.value = config.cols;
+        
+        showNotification(`调整为${config.rows}行${config.cols}列以适应${students.length}名学生`);
+    }
+    
+    // 计算学生位置
+    studentPositions = calculatePositions(students);
+    
+    // 创建学生元素
+    studentPositions.forEach((student, index) => {
+        const studentElement = document.createElement('div');
+        studentElement.className = 'student-desk';
+        studentElement.textContent = student.name;
+        studentElement.dataset.id = student.id;
+        studentElement.dataset.index = index;
+        
+        // 设置位置
+        studentElement.style.left = `${student.left}px`;
+        studentElement.style.top = `${student.top}px`;
+        studentElement.style.width = `${config.deskWidth}px`;
+        studentElement.style.height = `${config.deskHeight}px`;
+        
+        // 设置背景色，根据组别
+        let bgColor;
+        if (student.group) {
+            // 根据组名生成一致的颜色
+            const hash = hashString(student.group);
+            const hue = hash % 360;
+            bgColor = `hsl(${hue}, 85%, 75%)`;
+        } else {
+            // 随机生成鲜艳的颜色
+            const hue = Math.floor(Math.random() * 360);
+            bgColor = `hsl(${hue}, 85%, 75%)`;
+        }
+        studentElement.style.backgroundColor = bgColor;
+        
+        // 根据背景色的亮度决定文字颜色
+        const isDark = getColorBrightness(bgColor) < 128;
+        studentElement.style.color = isDark ? 'white' : 'black';
+        
+        // 添加到容器
+        studentContainer.appendChild(studentElement);
+        
+        // 设置拖拽事件
+        setupDragEvents(studentElement);
+    });
+}
+    
+    // 字符串哈希函数
+    function hashString(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0; // 转为32位整数
+        }
+        return Math.abs(hash);
+    }
+    
+    // 计算颜色亮度
+    function getColorBrightness(color) {
+        // 简单的亮度计算，对于HSL可以直接查看L值
+        if (color.startsWith('hsl')) {
+            const match = color.match(/hsl\(\s*\d+\s*,\s*\d+%\s*,\s*(\d+)%\s*\)/);
+            if (match && match[1]) {
+                return parseInt(match[1]) * 2.55;
+            }
+        }
+        return 128; // 默认中等亮度
+    }
+    
+    // 重置座位
+    function resetSeating() {
+        renderStudents();
+        showNotification('座位已重置为初始布局');
+    }
+    
+    // 随机排列
+    function randomizeSeating() {
+        const students = document.querySelectorAll('.student-desk');
+        if (students.length === 0) return;
+        
+        // 获取所有座位的位置
+        const positions = Array.from(students).map(desk => {
+            return {
+                left: desk.style.left,
+                top: desk.style.top
+            };
+        });
+        
+        // 随机打乱位置
+        shuffleArray(positions);
+        
+        // 应用新位置
+        students.forEach((desk, i) => {
+            desk.style.left = positions[i].left;
+            desk.style.top = positions[i].top;
+            
+            // 添加动画效果
+            desk.style.transition = 'left 0.5s ease, top 0.5s ease';
+            setTimeout(() => {
+                desk.style.transition = '';
+            }, 500);
+        });
+        
+        showNotification('座位已随机排列');
+    }
+    
+    // 洗牌算法
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+    
+    // 保存座位布局
+    function saveLayout() {
+        const layout = [];
+        const students = document.querySelectorAll('.student-desk');
+        
+        students.forEach(desk => {
+            const index = desk.dataset.index;
+            const id = desk.dataset.id;
+            
+            layout.push({
+                id: id,
+                name: desk.textContent,
+                left: desk.style.left,
+                top: desk.style.top,
+                index: index
+            });
+        });
+        
+        try {
+            // 保存到localStorage
+            localStorage.setItem(`seating_${className}`, JSON.stringify({
+                layout,
+                config,
+                timestamp: new Date().toISOString()
+            }));
+            
+            showNotification('座位布局已保存');
+        } catch (error) {
+            showNotification('保存失败，可能是存储空间不足', 5000);
+            console.error('Save error:', error);
+        }
+    }
+    
+    // 加载保存的布局
+    function loadSavedLayout() {
+        try {
+            const saved = localStorage.getItem(`seating_${className}`);
+            if (!saved) return false;
+            
+            const data = JSON.parse(saved);
+            if (!data.layout || !data.layout.length) return false;
+            
+            // 更新配置
+            if (data.config) {
+                config = {...config, ...data.config};
+                rowInput.value = config.rows;
+                colInput.value = config.cols;
+            }
+            
+            // 渲染学生后应用保存的位置
+            renderStudents();
+            
+            setTimeout(() => {
+                const students = document.querySelectorAll('.student-desk');
+                const savedLayout = data.layout;
+                
+                // 只应用存在于当前学生列表中的布局
+                savedLayout.forEach(item => {
+                    const desk = document.querySelector(`.student-desk[data-id="${item.id}"]`);
+                    if (desk) {
+                        desk.style.left = item.left;
+                        desk.style.top = item.top;
+                    }
+                });
+                
+                const savedDate = new Date(data.timestamp);
+                const dateString = savedDate.toLocaleDateString();
+                showNotification(`已加载${dateString}保存的座位布局`);
+            }, 100);
+            
+            return true;
+        } catch (error) {
+            console.error('Load error:', error);
+            return false;
+        }
+    }
+    
+    // 设置拖拽事件
+    function setupDragEvents(element) {
+        element.addEventListener('mousedown', startDrag);
+        element.addEventListener('touchstart', startDrag, { passive: false });
+        
+        element.addEventListener('mouseover', (e) => {
+            tooltip.textContent = `拖动调整 ${element.textContent} 的位置`;
+            tooltip.style.opacity = '1';
+            tooltip.style.left = `${e.clientX + 10}px`;
+            tooltip.style.top = `${e.clientY + 10}px`;
+        });
+        
+        element.addEventListener('mouseout', () => {
+            tooltip.style.opacity = '0';
+        });
+    }
+    
+    // 开始拖拽
+    function startDrag(e) {
+        e.preventDefault();
+        
+        draggedElement = this;
+        draggedElement.classList.add('dragging');
+        
+        // 计算鼠标与元素的相对位置
+        if (e.type === 'mousedown') {
+            offsetX = e.clientX - draggedElement.getBoundingClientRect().left;
+            offsetY = e.clientY - draggedElement.getBoundingClientRect().top;
+        } else {
+            const touch = e.touches[0];
+            offsetX = touch.clientX - draggedElement.getBoundingClientRect().left;
+            offsetY = touch.clientY - draggedElement.getBoundingClientRect().top;
+        }
+        
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('touchmove', drag, { passive: false });
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+    }
+    
+    // 拖拽过程
+    function drag(e) {
+        e.preventDefault();
+        
+        if (!draggedElement) return;
+        
+        let clientX, clientY;
+        
+        if (e.type === 'mousemove') {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        } else {
+            const touch = e.touches[0];
+            clientX = touch.clientX;
+            clientY = touch.clientY;
+        }
+        
+        // 获取容器坐标
+        const containerRect = studentContainer.getBoundingClientRect();
+        
+        // 计算新位置
+        let left = clientX - containerRect.left - offsetX;
+        let top = clientY - containerRect.top - offsetY;
+      // 限制在容器内
+        left = Math.max(0, Math.min(left, containerRect.width - draggedElement.offsetWidth));
+        top = Math.max(0, Math.min(top, containerRect.height - draggedElement.offsetHeight));
+
+        // 辅助对齐功能
+const threshold = 10; // 吸附阈值（像素）
+const otherDesks = document.querySelectorAll('.student-desk:not(.dragging)');
+let nearestH = null;
+let nearestV = null;
+let minHDist = threshold;
+let minVDist = threshold;
+
+// 获取当前拖动元素的尺寸
+const deskWidth = draggedElement.offsetWidth;
+const deskHeight = draggedElement.offsetHeight;
+
+// 计算中心点
+const centerX = left + deskWidth / 2;
+const centerY = top + deskHeight / 2;
+
+// 检查与其他座位的对齐
+otherDesks.forEach(desk => {
+    const deskRect = desk.getBoundingClientRect();
+    const containerRect = studentContainer.getBoundingClientRect();
+    
+    // 计算其他座位的中心点相对于容器的位置
+    const otherLeft = desk.offsetLeft;
+    const otherTop = desk.offsetTop;
+    const otherCenterX = otherLeft + desk.offsetWidth / 2;
+    const otherCenterY = otherTop + desk.offsetHeight / 2;
+    
+    // 检查水平对齐（中心线）
+    const hDist = Math.abs(centerY - otherCenterY);
+    if (hDist < minHDist) {
+        minHDist = hDist;
+        nearestH = otherCenterY;
+    }
+    
+    // 检查垂直对齐（中心线）
+    const vDist = Math.abs(centerX - otherCenterX);
+    if (vDist < minVDist) {
+        minVDist = vDist;
+        nearestV = otherCenterX;
+    }
+});
+
+// 应用吸附效果
+if (nearestH !== null) {
+    // 水平对齐，调整top值
+    top = nearestH - deskHeight / 2;
+    // 显示水平参考线
+    horizontalLine.style.top = `${nearestH}px`;
+    horizontalLine.style.display = 'block';
+} else {
+    horizontalLine.style.display = 'none';
+}
+
+if (nearestV !== null) {
+    // 垂直对齐，调整left值
+    left = nearestV - deskWidth / 2;
+    // 显示垂直参考线
+    verticalLine.style.left = `${nearestV}px`;
+    verticalLine.style.display = 'block';
+} else {
+    verticalLine.style.display = 'none';
+}
+        // 设置新位置
+        draggedElement.style.left = `${left}px`;
+        draggedElement.style.top = `${top}px`;
+        
+        // 更新提示位置
+        tooltip.style.left = `${clientX + 10}px`;
+        tooltip.style.top = `${clientY + 10}px`;
+    }
+    
+    // 结束拖拽
+    function endDrag(e) {
+        if (!draggedElement) return;
+        
+        draggedElement.classList.remove('dragging');
+        
+        // 检查是否有重叠的座位，如果有，交换位置
+        checkForSwap();
+        
+        // 重置拖拽状态
+        draggedElement = null;
+        
+        // 移除事件监听
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('touchmove', drag);
+        document.removeEventListener('mouseup', endDrag);
+        document.removeEventListener('touchend', endDrag);
+        
+        // 隐藏提示
+        tooltip.style.opacity = '0';
+        // 隐藏辅助对齐线
+        horizontalLine.style.display = 'none';
+        verticalLine.style.display = 'none';
+    }
+    
+    // 检查是否需要交换位置
+    function checkForSwap() {
+        if (!draggedElement) return;
+        
+        const dragged = draggedElement;
+        const draggedRect = dragged.getBoundingClientRect();
+        const draggedCenter = {
+            x: draggedRect.left + draggedRect.width / 2,
+            y: draggedRect.top + draggedRect.height / 2
+        };
+        
+        const students = document.querySelectorAll('.student-desk:not(.dragging)');
+        let targetElement = null;
+        let maxOverlap = 0;
+        
+        // 查找最大重叠的元素
+        students.forEach(student => {
+            const rect = student.getBoundingClientRect();
+            
+            // 计算重叠区域
+            const overlapX = Math.min(draggedRect.right, rect.right) - Math.max(draggedRect.left, rect.left);
+            const overlapY = Math.min(draggedRect.bottom, rect.bottom) - Math.max(draggedRect.top, rect.top);
+            
+            if (overlapX > 0 && overlapY > 0) {
+                const overlapArea = overlapX * overlapY;
+                if (overlapArea > maxOverlap) {
+                    maxOverlap = overlapArea;
+                    targetElement = student;
+                }
+            }
+        });
+        
+        // 如果找到目标元素，交换位置
+        if (targetElement) {
+            const targetLeft = targetElement.style.left;
+            const targetTop = targetElement.style.top;
+            
+            targetElement.style.transition = 'left 0.3s, top 0.3s';
+            targetElement.style.left = dragged.style.left;
+            targetElement.style.top = dragged.style.top;
+            
+            dragged.style.transition = 'left 0.3s, top 0.3s';
+            dragged.style.left = targetLeft;
+            dragged.style.top = targetTop;
+            
+            // 添加动画结束后移除过渡效果
+            setTimeout(() => {
+                targetElement.style.transition = '';
+                dragged.style.transition = '';
+            }, 300);
+            
+            showNotification(`${dragged.textContent}与${targetElement.textContent}交换了位置`);
+        }
+    }
+    
+    // 显示/隐藏行列设置面板
+    function toggleRowColSettings() {
+        if (rowColSettings.style.display === 'flex') {
+            rowColSettings.style.display = 'none';
+        } else {
+            rowColSettings.style.display = 'flex';
+        }
+    }
+    
+    // 应用行列设置
+    function applyRowColSettings() {
+        const newRows = parseInt(rowInput.value) || 6;
+        const newCols = parseInt(colInput.value) || 6;
+        
+        if (newRows < 1 || newRows > 10 || newCols < 1 || newCols > 10) {
+            showNotification('行列数需在1-10之间');
+            return;
+        }
+        
+        config.rows = newRows;
+        config.cols = newCols;
+        
+        // 重新渲染座位
+        renderStudents();
+        
+        // 隐藏设置面板
+        rowColSettings.style.display = 'none';
+        
+        showNotification(`座位布局已更新为${newRows}行${newCols}列`);
+    }
+    
+    // 添加按钮事件
+    function setupButtonEvents() {
+        resetBtn.addEventListener('click', resetSeating);
+        randomBtn.addEventListener('click', randomizeSeating);
+        saveBtn.addEventListener('click', saveLayout);
+        backToPointsBtn.addEventListener('click', () => {
+            // 切换回积分管理界面
+            document.getElementById('points-button').click();
+        });
+        
+        rowColBtn.addEventListener('click', toggleRowColSettings);
+        applySettings.addEventListener('click', applyRowColSettings);
+        
+        // 窗口大小改变时重新计算位置
+        window.addEventListener('resize', () => {
+            // 获取当前学生元素位置信息
+            const currentLayout = [];
+            const students = document.querySelectorAll('.student-desk');
+            
+            students.forEach(desk => {
+                currentLayout.push({
+                    id: desk.dataset.id,
+                    left: desk.style.left,
+                    top: desk.style.top
+                });
+            });
+            
+            // 重新渲染学生
+            renderStudents();
+            
+            // 如果有保存的布局，则不应用之前的位置
+            const hasSavedLayout = localStorage.getItem(`seating_${className}`);
+            if (!hasSavedLayout && currentLayout.length > 0) {
+                // 应用之前的相对位置
+                setTimeout(() => {
+                    const newStudents = document.querySelectorAll('.student-desk');
+                    currentLayout.forEach(item => {
+                        const desk = document.querySelector(`.student-desk[data-id="${item.id}"]`);
+                        if (desk) {
+                            desk.style.left = item.left;
+                            desk.style.top = item.top;
+                        }
+                    });
+                }, 100);
+            }
+        });
+    }
+    // 同步积分系统和座位调整系统的数据
+function syncPointsAndSeating() {
+    // 检查全局变量，不使用window.前缀
+    if (!studentData) {
+        console.error('无法找到积分系统数据');
+        return false;
+    }
+    
+    if (studentData.length === 0) {
+        console.warn('积分系统中没有学生数据');
+        return false;
+    }
+    
+    console.log('成功连接到积分系统，找到 ' + studentData.length + ' 名学生');
+    return true;
+}
+    // 初始化
+   function initialize() {
+    // 尝试同步数据
+    syncPointsAndSeating();
+    
+    // 设置事件监听
+    setupButtonEvents();
+    
+    // 渲染学生
+    if (!loadSavedLayout()) {
+        renderStudents();
+        showNotification('座位调整功能已初始化，拖动姓名卡可调整座位', 5000);
+    }
+}
+    // 将积分系统的数据传递给座位调整模块
+function passDataToSeatingModule() {
+    if (studentData && studentData.length > 0) {
+        console.log('正在传递积分系统数据到座位调整模块...');
+        console.log('学生数量: ' + studentData.length);
+        
+        // 将全局变量传递给座位模块的局部变量
+        window.seatingStudentsData = [...studentData];
+    }
+}
+
+// 在初始化之前调用数据传递函数
+passDataToSeatingModule();
+    // 启动
+    initialize();
+}
+// 初始化作业查收模块
+function initHomeworkModule() {
+    const homeworkModule = document.getElementById('homework-module');
+    
+    homeworkModule.innerHTML = `
+    <div class="homework-header">
+        <h1>作业查收</h1>
+        <div class="homework-back-btn" id="homework-back-to-points">返回积分管理</div>
+    </div>
+
+    <div class="homework-stats" id="homework-stats">
+        <h3>作业统计</h3>
+        <div class="stats-item">
+            <div class="stats-number stats-submitted" id="submitted-count">0</div>
+            <div>已提交</div>
+        </div>
+        <div class="stats-item">
+            <div class="stats-number stats-pending" id="pending-count">0</div>
+            <div>未提交</div>
+        </div>
+    </div>
+
+    <div class="homework-controls">
+        <button id="reset-homework-btn" class="homework-btn">重置全部</button>
+        <button id="show-pending-btn" class="homework-btn">显示未交</button>
+        <button id="show-all-btn" class="homework-btn">显示全部</button>
+    </div>
+    
+    <div class="homework-cards-container" id="homework-cards-container">
+        <!-- 学生卡片将在这里生成 -->
+    </div>
+
+    <div class="homework-notification" id="homework-notification"></div>
+    `;
+    
+    // 初始化作业查收功能
+    initHomeworkScript();
+}
+
+// 作业查收模块的JavaScript功能
+function initHomeworkScript() {
+    // DOM元素
+    const homeworkBackBtn = document.getElementById('homework-back-to-points');
+    const resetHomeworkBtn = document.getElementById('reset-homework-btn');
+    const showPendingBtn = document.getElementById('show-pending-btn');
+    const showAllBtn = document.getElementById('show-all-btn');
+    const homeworkCardsContainer = document.getElementById('homework-cards-container');
+    const homeworkNotification = document.getElementById('homework-notification');
+    const submittedCountEl = document.getElementById('submitted-count');
+    const pendingCountEl = document.getElementById('pending-count');
+    
+    // 作业提交状态数据
+    let homeworkStatus = {};
+    
+    // 从学生数据获取学生列表
+    function getStudentsForHomework() {
+        if (studentData && studentData.length > 0) {
+            return studentData.map(student => ({
+                id: student.id,
+                name: student.name,
+                group: student.group || '未分组'
+            }));
+        } else {
+            // 示例数据
+            const demoNames = ['张三', '李四', '王五', '赵六', '钱七', '孙八', 
+                             '周九', '吴十', '郑十一', '王十二', '赵十三', '钱十四'];
+            return demoNames.map((name, index) => ({
+                id: `demo-${index}`,
+                name: name,
+                group: `第${Math.floor(index / 4) + 1}组`
+            }));
+        }
+    }
+    
+    // 显示通知
+    function showHomeworkNotification(message, duration = 3000) {
+        homeworkNotification.textContent = message;
+        homeworkNotification.style.opacity = '1';
+        homeworkNotification.style.transform = 'translateX(-50%) translateY(0)';
+        
+        clearTimeout(homeworkNotification.timer);
+        homeworkNotification.timer = setTimeout(() => {
+            homeworkNotification.style.opacity = '0';
+            homeworkNotification.style.transform = 'translateX(-50%) translateY(-20px)';
+        }, duration);
+    }
+    
+    // 更新统计信息
+    function updateStats() {
+        const students = getStudentsForHomework();
+        const submittedCount = students.filter(student => homeworkStatus[student.id] === 'submitted').length;
+        const pendingCount = students.length - submittedCount;
+        
+        submittedCountEl.textContent = submittedCount;
+        pendingCountEl.textContent = pendingCount;
+    }
+    
+    // 创建学生作业卡片
+    function createHomeworkCard(student) {
+        const card = document.createElement('div');
+        card.className = 'student-homework-card';
+        card.dataset.studentId = student.id;
+        card.dataset.status = homeworkStatus[student.id] || 'pending';
+        
+        // 根据组别设置不同的背景色
+        let bgColor = '#ffffff';
+        if (student.group && student.group !== '未分组') {
+            const hash = hashString(student.group);
+            const hue = hash % 360;
+            bgColor = `hsl(${hue}, 30%, 95%)`;
+            card.style.borderLeft = `4px solid hsl(${hue}, 70%, 60%)`;
+        }
+        card.style.backgroundColor = bgColor;
+        
+        card.innerHTML = `
+            <div class="homework-card-name">${student.name}</div>
+            <div class="homework-card-status">${student.group}</div>
+        `;
+        
+        // 点击卡片事件
+        card.addEventListener('click', function() {
+            if (homeworkStatus[student.id] === 'submitted') {
+                // 如果已经提交过，不再处理
+                showHomeworkNotification(`${student.name} 的作业已经查收过了`);
+                return;
+            }
+            
+            // 标记为已提交
+            homeworkStatus[student.id] = 'submitted';
+            
+            // 添加溶解动画
+            card.classList.add('dissolving');
+            
+            // 动画完成后隐藏卡片
+            setTimeout(() => {
+                card.classList.add('disappeared');  /* 改用CSS类而不是display:none */
+                updateStats();
+                
+                // 检查是否所有作业都已查收
+                const students = getStudentsForHomework();
+                const allSubmitted = students.every(s => homeworkStatus[s.id] === 'submitted');
+                if (allSubmitted) {
+                    showHomeworkNotification('🎉 所有同学的作业都已查收完毕！', 5000);
+                } else {
+                    showHomeworkNotification(`✓ ${student.name} 的作业已查收`);
+                }
+            }, 1000);
+            
+            // 保存状态到本地存储
+            saveHomeworkStatus();
+        });
+        
+        return card;
+    }
+    
+    // 渲染所有学生卡片
+    function renderHomeworkCards(filter = 'all') {
+        homeworkCardsContainer.innerHTML = '';
+        const students = getStudentsForHomework();
+        
+        let filteredStudents = students;
+        if (filter === 'pending') {
+            filteredStudents = students.filter(student => homeworkStatus[student.id] !== 'submitted');
+        }
+        
+        filteredStudents.forEach(student => {
+            const card = createHomeworkCard(student);
+            homeworkCardsContainer.appendChild(card);
+        });
+        
+        updateStats();
+        
+        if (filteredStudents.length === 0) {
+            homeworkCardsContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; color: #7f8c8d; font-size: 18px; padding: 40px;">
+                    ${filter === 'pending' ? '🎉 所有同学都已提交作业！' : '暂无学生数据'}
+                </div>
+            `;
+        }
+    }
+    
+    // 哈希函数（用于生成组别颜色）
+    function hashString(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash);
+    }
+    
+    // 保存作业状态到本地存储
+    function saveHomeworkStatus() {
+        try {
+            const className = window.className || 'default';
+            localStorage.setItem(`homework_status_${className}`, JSON.stringify(homeworkStatus));
+        } catch (error) {
+            console.error('保存作业状态失败:', error);
+        }
+    }
+    
+    // 从本地存储加载作业状态
+    function loadHomeworkStatus() {
+        try {
+            const className = window.className || 'default';
+            const saved = localStorage.getItem(`homework_status_${className}`);
+            if (saved) {
+                homeworkStatus = JSON.parse(saved);
+                showHomeworkNotification('已加载之前的作业查收记录');
+            }
+        } catch (error) {
+            console.error('加载作业状态失败:', error);
+            homeworkStatus = {};
+        }
+    }
+    
+    // 事件监听器
+    homeworkBackBtn.addEventListener('click', () => {
+        document.getElementById('points-button').click();
+    });
+    
+    resetHomeworkBtn.addEventListener('click', () => {
+        if (confirm('确定要重置所有作业状态吗？这将清除所有查收记录。')) {
+            homeworkStatus = {};
+            saveHomeworkStatus();
+            renderHomeworkCards();
+            showHomeworkNotification('已重置所有作业状态');
+        }
+    });
+    
+    showPendingBtn.addEventListener('click', () => {
+        renderHomeworkCards('pending');
+        showHomeworkNotification('显示未提交作业的同学');
+    });
+    
+    showAllBtn.addEventListener('click', () => {
+        renderHomeworkCards('all');
+        showHomeworkNotification('显示所有同学');
+    });
+    
+    // 初始化
+    loadHomeworkStatus();
+    renderHomeworkCards();
+    showHomeworkNotification('作业查收功能已准备就绪');
+}
+// 在浮动工具栏中添加事件监听
+function setupToolbar() {
+    const pointsButton = document.getElementById('points-button');
+const seatingButton = document.getElementById('seating-button');
+const homeworkButton = document.getElementById('homework-button');
+    const mainContent = document.querySelector('.container');
+const seatingModule = document.getElementById('seating-module');
+const homeworkModule = document.getElementById('homework-module');
+    
+    // 初始状态：显示积分管理
+    pointsButton.classList.add('active');
+    mainContent.style.display = 'block';
+seatingModule.style.display = 'none';
+homeworkModule.style.display = 'none';
+    
+    // 点击积分管理按钮
+  pointsButton.addEventListener('click', function() {
+    pointsButton.classList.add('active');
+    seatingButton.classList.remove('active');
+    homeworkButton.classList.remove('active');
+    mainContent.style.display = 'block';
+    seatingModule.style.display = 'none';
+    homeworkModule.style.display = 'none';
+});
+    
+   // 点击座位调整按钮
+seatingButton.addEventListener('click', function() {
+    if (!seatingModule.hasChildNodes()) {
+        // 第一次点击时初始化座位调整模块
+        initSeatingModule();
+    }
+    
+    // 更新座位页面的班级名称
+    const schoolClassTitle = document.getElementById('seating-school-class');
+    const classBtn = document.getElementById('class-btn');
+    if (schoolClassTitle && classBtn) {
+        schoolClassTitle.textContent = classBtn.textContent;
+    }
+    
+    seatingButton.classList.add('active');
+    pointsButton.classList.remove('active');
+    mainContent.style.display = 'none';
+    seatingModule.style.display = 'block';
+});
+  // 点击作业查收按钮
+homeworkButton.addEventListener('click', function() {
+    if (!homeworkModule.hasChildNodes()) {
+        // 第一次点击时初始化作业查收模块
+        initHomeworkModule();
+    }
+    
+    homeworkButton.classList.add('active');
+    pointsButton.classList.remove('active');
+    seatingButton.classList.remove('active');
+    mainContent.style.display = 'none';
+    seatingModule.style.display = 'none';
+    homeworkModule.style.display = 'block';
+});
+}
+
+// 在浮动工具栏中添加座位随机分组功能
+function enhanceSeatingModule() {
+    // 等待座位模块完全初始化
+    setTimeout(() => {
+        const controlsDiv = document.querySelector('#seating-module .seating-controls');
+        if (!controlsDiv) return;
+        
+        // 添加分组按钮
+        const groupBtn = document.createElement('button');
+        groupBtn.id = 'groupBtn';
+        groupBtn.className = 'seating-btn';
+        groupBtn.textContent = '按组排列';
+        controlsDiv.appendChild(groupBtn);
+        
+        // 添加事件监听
+        groupBtn.addEventListener('click', arrangeByGroups);
+        
+        // 按组排列座位
+        function arrangeByGroups() {
+            // 获取所有学生元素
+            const students = document.querySelectorAll('.student-desk');
+            if (students.length === 0) return;
+            
+            // 按组分类
+            const groupedStudents = {};
+            students.forEach(desk => {
+                const id = desk.dataset.id;
+                // 从积分系统中找到学生信息
+                const student = findStudentById(id);
+                
+                if (student && student.group) {
+                    if (!groupedStudents[student.group]) {
+                        groupedStudents[student.group] = [];
+                    }
+                    groupedStudents[student.group].push(desk);
+                } else {
+                    // 对于没有组的学生，放在"其他"组
+                    if (!groupedStudents['其他']) {
+                        groupedStudents['其他'] = [];
+                    }
+                    groupedStudents['其他'].push(desk);
+                }
+            });
+            
+            // 计算每组的位置
+            const classroom = document.querySelector('.classroom');
+            const containerRect = classroom.getBoundingClientRect();
+            const containerWidth = containerRect.width;
+            const containerHeight = containerRect.height - 70; // 减去讲台高度
+            
+            // 获取分组数量
+            const groupCount = Object.keys(groupedStudents).length;
+            
+            // 计算每组的区域
+            let rowsPerGroup, colsPerGroup;
+            if (groupCount <= 2) {
+                // 如果只有1-2组，横向排列
+                rowsPerGroup = 1;
+                colsPerGroup = groupCount;
+            } else if (groupCount <= 6) {
+                // 如果有3-6组，网格排列
+                rowsPerGroup = Math.ceil(Math.sqrt(groupCount));
+                colsPerGroup = Math.ceil(groupCount / rowsPerGroup);
+            } else {
+                // 如果多于6组，多行排列
+                rowsPerGroup = Math.ceil(groupCount / 4);
+                colsPerGroup = 4;
+            }
+            
+            // 计算每个组区域的大小
+            const groupWidth = containerWidth / colsPerGroup;
+            const groupHeight = containerHeight / rowsPerGroup;
+            
+            // 设置每个组的位置
+            let groupIndex = 0;
+            for (const groupName in groupedStudents) {
+                const group = groupedStudents[groupName];
+                const groupSize = group.length;
+                
+                // 计算当前组的行列位置
+                const groupRow = Math.floor(groupIndex / colsPerGroup);
+                const groupCol = groupIndex % colsPerGroup;
+                
+                // 计算组区域的左上角坐标
+                const groupLeft = groupCol * groupWidth;
+                const groupTop = groupRow * groupHeight;
+                
+                // 计算每个学生在组内的行列数
+                const studentsPerRow = Math.ceil(Math.sqrt(groupSize));
+                const studentsPerCol = Math.ceil(groupSize / studentsPerRow);
+                
+                // 计算每个学生座位的大小
+                const studentWidth = groupWidth / studentsPerRow;
+                const studentHeight = groupHeight / studentsPerCol;
+                
+                // 设置组内每个学生的位置
+                group.forEach((desk, i) => {
+                    const row = Math.floor(i / studentsPerRow);
+                    const col = i % studentsPerRow;
+                    
+                    // 计算座位中心位置
+                    const centerX = groupLeft + col * studentWidth + studentWidth / 2;
+                    const centerY = groupTop + row * studentHeight + studentHeight / 2;
+                    
+                    // 获取座位尺寸
+                    const deskWidth = parseFloat(desk.style.width);
+                    const deskHeight = parseFloat(desk.style.height);
+                    
+                    // 设置新位置
+                    desk.style.transition = 'left 0.5s ease, top 0.5s ease';
+                    desk.style.left = `${centerX - deskWidth / 2}px`;
+                    desk.style.top = `${centerY - deskHeight / 2}px`;
+                    
+                    // 延迟移除过渡效果
+                    setTimeout(() => {
+                        desk.style.transition = '';
+                    }, 500);
+                });
+                
+                groupIndex++;
+            }
+            
+            // 显示通知
+            const notification = document.getElementById('seating-notification');
+            if (notification) {
+                notification.textContent = '已按小组排列座位';
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(-50%) translateY(0)';
+                
+                clearTimeout(notification.timer);
+                notification.timer = setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(-50%) translateY(-20px)';
+                }, 3000);
+            }
+        }
+        
+        // 从积分系统中查找学生
+  function findStudentById(id) {
+    // 直接从全局变量查找
+    if (studentData && studentData.length > 0) {
+        return studentData.find(s => s.id === id);
+    }
+    return null;
+}
+    }, 1000); // 给予足够时间让座位模块初始化
+}
+
+// 添加打印功能
+function addPrintFeature() {
+    // 等待座位模块完全初始化
+    setTimeout(() => {
+        const controlsDiv = document.querySelector('#seating-module .seating-controls');
+        if (!controlsDiv) return;
+        
+        // 添加打印按钮
+        const printBtn = document.createElement('button');
+        printBtn.id = 'printBtn';
+        printBtn.className = 'seating-btn';
+        printBtn.style.backgroundColor = '#4CAF50';
+        printBtn.textContent = '打印座位表';
+        controlsDiv.appendChild(printBtn);
+        
+        // 添加事件监听
+        printBtn.addEventListener('click', printSeatingChart);
+        
+        // 打印座位表
+        function printSeatingChart() {
+            // 创建打印样式
+            const style = document.createElement('style');
+            style.id = 'print-style';
+            style.textContent = `
+                @media print {
+                    body * {
+                        visibility: hidden;
+                    }
+                    #seating-module, #seating-module * {
+                        visibility: visible;
+                    }
+                    #seating-module {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: white !important;
+                        animation: none !important;
+                    }
+                    .seating-controls, .row-col-settings, .seating-back-btn, .seating-tooltip, .seating-notification, .floating-toolbar {
+                        display: none !important;
+                    }
+                    .classroom {
+                        height: 80vh !important;
+                        border: 1px solid #ccc;
+                    }
+                    .student-desk {
+                        border: 1px solid black !important;
+                        box-shadow: none !important;
+                    }
+                    .seating-header {
+                        background-color: white !important;
+                        color: black !important;
+                        box-shadow: none !important;
+                        border-bottom: 2px solid #333;
+                        padding-bottom: 20px !important;
+                    }
+                    .podium {
+                        border: 1px solid black !important;
+                        background-color: #eee !important;
+                        color: black !important;
+                    }
+                }
+            `;
+            
+            document.head.appendChild(style);
+            
+            // 显示通知
+            const notification = document.getElementById('seating-notification');
+            if (notification) {
+                notification.textContent = '正在准备打印...';
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(-50%) translateY(0)';
+            }
+            
+            // 延迟打印，给浏览器时间应用样式
+            setTimeout(() => {
+                window.print();
+                
+                // 打印完成后移除样式
+                setTimeout(() => {
+                    const printStyle = document.getElementById('print-style');
+                    if (printStyle) {
+                        printStyle.remove();
+                    }
+                    
+                    // 更新通知
+                    if (notification) {
+                        notification.textContent = '打印准备完成';
+                        
+                        clearTimeout(notification.timer);
+                        notification.timer = setTimeout(() => {
+                            notification.style.opacity = '0';
+                            notification.style.transform = 'translateX(-50%) translateY(-20px)';
+                        }, 3000);
+                    }
+                }, 1000);
+            }, 500);
+        }
+    }, 1000);
+}
+
+// 添加快速搜索功能
+function addSearchFeature() {
+    setTimeout(() => {
+        const container = document.querySelector('#seating-module .seating-container');
+        if (!container) return;
+        
+        // 创建搜索栏
+        const searchDiv = document.createElement('div');
+        searchDiv.className = 'search-container';
+        searchDiv.innerHTML = `
+            <input type="text" id="student-search" placeholder="搜索学生..." class="search-input">
+            <button id="clear-search" class="search-clear">✕</button>
+        `;
+        
+        // 添加搜索栏样式
+        const style = document.createElement('style');
+        style.textContent = `
+            .search-container {
+                display: flex;
+                margin: 10px auto;
+                max-width: 300px;
+                position: relative;
+            }
+            .search-input {
+                width: 100%;
+                padding: 8px 30px 8px 10px;
+                border: 1px solid #ccc;
+                border-radius: 20px;
+                font-size: 16px;
+                outline: none;
+                transition: all 0.3s;
+            }
+            .search-input:focus {
+                border-color: #39c0ed;
+                box-shadow: 0 0 5px rgba(57, 192, 237, 0.5);
+            }
+            .search-clear {
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                color: #999;
+                cursor: pointer;
+                display: none;
+                font-size: 16px;
+                padding: 0;
+            }
+            .student-desk.highlight {
+                animation: highlight-pulse 1.5s infinite;
+                z-index: 50;
+                transform: scale(1.1);
+            }
+            @keyframes highlight-pulse {
+                0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
+                70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+            }
+        `;
+        
+        document.head.appendChild(style);
+        container.insertBefore(searchDiv, container.firstChild);
+        
+        // 搜索功能
+        const searchInput = document.getElementById('student-search');
+        const clearButton = document.getElementById('clear-search');
+        
+        searchInput.addEventListener('input', function() {
+            const searchText = this.value.trim().toLowerCase();
+            if (searchText) {
+                clearButton.style.display = 'block';
+                highlightStudents(searchText);
+            } else {
+                clearButton.style.display = 'none';
+                clearHighlights();
+            }
+        });
+        
+        clearButton.addEventListener('click', function() {
+            searchInput.value = '';
+            clearButton.style.display = 'none';
+            clearHighlights();
+            searchInput.focus();
+        });
+        
+        function highlightStudents(searchText) {
+            const desks = document.querySelectorAll('.student-desk');
+            let found = false;
+            
+            desks.forEach(desk => {
+                const name = desk.textContent.toLowerCase();
+                desk.classList.remove('highlight');
+                
+                if (name.includes(searchText)) {
+                    desk.classList.add('highlight');
+                    found = true;
+                }
+            });
+            
+            // 显示搜索结果通知
+            const notification = document.getElementById('seating-notification');
+            if (notification) {
+                if (found) {
+                    notification.textContent = '已找到匹配的学生';
+                } else {
+                    notification.textContent = '没有找到匹配的学生';
+                }
+                
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(-50%) translateY(0)';
+                
+                clearTimeout(notification.timer);
+                notification.timer = setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(-50%) translateY(-20px)';
+                }, 3000);
+            }
+        }
+        
+        function clearHighlights() {
+            const desks = document.querySelectorAll('.student-desk');
+            desks.forEach(desk => {
+                desk.classList.remove('highlight');
+            });
+        }
+    }, 1200);
+}
+
+// 增强锁定功能
+function enhanceLockFeature() {
+    setTimeout(() => {
+        // 获取座位模块和锁图标
+        const seatingModule = document.getElementById('seating-module');
+        const lockIcon = document.getElementById('lock-icon');
+        
+        if (!seatingModule || !lockIcon) return;
+        
+        // 创建座位模块专用的锁定状态提示
+        const seatingLockIndicator = document.createElement('div');
+        seatingLockIndicator.className = 'seating-lock-indicator';
+        seatingLockIndicator.innerHTML = `<span>🔒</span> 锁定模式`;
+        seatingModule.appendChild(seatingLockIndicator);
+        
+        // 添加样式
+        const style = document.createElement('style');
+        style.textContent = `
+            .seating-lock-indicator {
+                position: fixed;
+                left: 20px;
+                bottom: 20px;
+                background-color: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 8px 15px;
+                border-radius: 20px;
+                display: none;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+                z-index: 100;
+            }
+            
+            .seating-lock-indicator.visible {
+                display: flex;
+            }
+            
+            .student-desk.locked {
+                cursor: not-allowed !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // 更新座位模块锁定状态
+        function updateSeatingLockState() {
+            // 检查全局锁定状态
+            const isLocked = window.isLocked !== undefined ? window.isLocked : true;
+            
+            // 更新锁定指示器
+            if (isLocked) {
+                seatingLockIndicator.classList.add('visible');
+                
+                // 为学生座位添加锁定类
+                const desks = document.querySelectorAll('.student-desk');
+                desks.forEach(desk => {
+                    desk.classList.add('locked');
+                });
+            } else {
+                seatingLockIndicator.classList.remove('visible');
+                
+                // 移除学生座位锁定类
+                const desks = document.querySelectorAll('.student-desk');
+                desks.forEach(desk => {
+                    desk.classList.remove('locked');
+                });
+            }
+        }
+        
+        // 初始更新锁定状态
+        updateSeatingLockState();
+        
+        // 监听锁定状态变化
+        // 创建一个MutationObserver来监视锁图标的变化
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    // 锁状态发生变化，更新座位模块
+                    setTimeout(updateSeatingLockState, 100);
+                }
+            });
+        });
+        
+        // 开始观察锁图标的class变化
+        observer.observe(lockIcon, { attributes: true });
+        
+        // 为座位拖动增加锁定检查
+        const originalStartDrag = window.startDrag;
+        if (typeof originalStartDrag === 'function') {
+            window.startDrag = function(e) {
+                // 检查是否锁定
+                const isLocked = window.isLocked !== undefined ? window.isLocked : true;
+                if (isLocked) {
+                    e.preventDefault();
+                    
+                    // 显示锁定提示
+                    const notification = document.getElementById('seating-notification');
+                    if (notification) {
+                        notification.textContent = '座位已锁定，请先解锁再调整座位';
+                        notification.style.opacity = '1';
+                        notification.style.transform = 'translateX(-50%) translateY(0)';
+                        
+                        clearTimeout(notification.timer);
+                        notification.timer = setTimeout(() => {
+                            notification.style.opacity = '0';
+                            notification.style.transform = 'translateX(-50%) translateY(-20px)';
+                        }, 3000);
+                    }
+                    return;
+                }
+                
+                // 如果未锁定，调用原始函数
+                originalStartDrag.call(this, e);
+            };
+        }
+    }, 1300);
+}
+
+// 集成所有增强功能
+function integrateAllEnhancements() {
+    // 添加所有增强功能
+    enhanceSeatingModule();
+    addPrintFeature();
+    addSearchFeature();
+    enhanceLockFeature();
+    
+    // 为浮动工具条添加淡入淡出效果
+    const style = document.createElement('style');
+    style.textContent = `
+        .floating-toolbar {
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+        
+        .floating-toolbar:hover {
+            opacity: 1;
+        }
+        
+        /* 改善座位调整按钮的视觉效果 */
+        #seating-button {
+            background: linear-gradient(to bottom, #43c6ac, #36a593);
+        }
+        
+        #seating-button.active {
+            background: linear-gradient(to bottom, #FF6B6B, #e55c5c);
+        }
+        
+        /* 添加工具提示 */
+        .toolbar-button::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            right: 70px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .toolbar-button:hover::after {
+            opacity: 1;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // 为浮动工具条按钮添加工具提示
+    setTimeout(() => {
+        const pointsButton = document.getElementById('points-button');
+        const seatingButton = document.getElementById('seating-button');
+        
+        if (pointsButton) pointsButton.setAttribute('data-tooltip', '积分管理模式');
+if (seatingButton) seatingButton.setAttribute('data-tooltip', '座位调整模式');
+const homeworkButton = document.getElementById('homework-button');
+if (homeworkButton) homeworkButton.setAttribute('data-tooltip', '作业查收模式');
+    }, 500);
+}
+
+// 在原有的setupToolbar函数之后调用集成增强功能
+const originalSetupToolbar = window.setupToolbar;
+window.setupToolbar = function() {
+    // 调用原始函数
+    if (typeof originalSetupToolbar === 'function') {
+        originalSetupToolbar();
+    }
+    
+    // 添加增强功能
+    setTimeout(integrateAllEnhancements, 500);
+};
+      // 确保所有DOM元素都已加载完成
+document.addEventListener('DOMContentLoaded', function() {
+    const lockIcon = document.getElementById('lock-icon');
+    const setPasswordBtn = document.getElementById('set-password');
+    const passwordProtectionToggle = document.getElementById('password-protection-toggle');
+    const passwordDialog = document.getElementById('password-dialog');
+    const passwordInput = document.getElementById('password-input');
+    const confirmPasswordInput = document.getElementById('confirm-password-input');
+    const passwordError = document.getElementById('password-error');
+    const passwordDialogTitle = document.getElementById('password-dialog-title');
+    const passwordCancelBtn = document.getElementById('password-cancel-btn');
+    const passwordConfirmBtn = document.getElementById('password-confirm-btn');
+    
+    // 初始化密码设置
+let passwordProtectionEnabled = localStorage.getItem('studentPointsSystemPasswordProtection') === 'true';
+if (passwordProtectionEnabled === null) passwordProtectionEnabled = true; // 默认启用
+let password = localStorage.getItem('studentPointsSystemPassword') || '';
+
+// 设置密码保护开关初始状态
+if (passwordProtectionToggle) {
+    passwordProtectionToggle.checked = passwordProtectionEnabled;
+}
+    
+    // 绑定设置密码按钮点击事件
+    if (setPasswordBtn) {
+        setPasswordBtn.addEventListener('click', function() {
+            openPasswordDialog('set');
+        });
+    }
+    
+// 密码保护开关事件
+if (passwordProtectionToggle) {
+    passwordProtectionToggle.addEventListener('change', function() {
+        // 如果用户尝试关闭密码保护，且已设置密码，则需要验证密码
+        if (!this.checked && password) {
+            // 阻止开关立即切换
+            this.checked = true;
+            // 打开密码验证对话框
+            openPasswordDialog('verify', 'disable_protection');
+        } else {
+            // 如果是开启密码保护，或者没有设置密码，直接更新状态
+            passwordProtectionEnabled = this.checked;
+            localStorage.setItem('studentPointsSystemPasswordProtection', passwordProtectionEnabled ? 'true' : 'false');
+            showToast(passwordProtectionEnabled ? '已启用密码保护' : '已禁用密码保护');
+        }
+    });
+}
+    
+    // 密码对话框关闭按钮
+    const closeBtn = document.querySelector('.password-dialog-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closePasswordDialog);
+    }
+    
+    if (passwordCancelBtn) {
+        passwordCancelBtn.addEventListener('click', closePasswordDialog);
+    }
+    
+    // 密码确认按钮
+    if (passwordConfirmBtn) {
+        passwordConfirmBtn.addEventListener('click', handlePasswordConfirm);
+    }
+    
+    // 密码输入框按回车确认
+    if (passwordInput) {
+        passwordInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (passwordConfirmBtn) passwordConfirmBtn.click();
+            }
+        });
+    }
+    
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (passwordConfirmBtn) passwordConfirmBtn.click();
+            }
+        });
+    }
+    
+    
+// 关闭密码对话框
+function closePasswordDialog() {
+    const passwordDialog = document.getElementById('password-dialog');
+    if (passwordDialog) {
+        passwordDialog.style.display = 'none';
+    }
+}
+    
+// 处理密码确认
+function handlePasswordConfirm() {
+    const passwordDialog = document.getElementById('password-dialog');
+    const passwordInput = document.getElementById('password-input');
+    const confirmPasswordInput = document.getElementById('confirm-password-input');
+    const passwordError = document.getElementById('password-error');
+    
+    if (!passwordDialog) return;
+    
+    const mode = passwordDialog.dataset.mode;
+    
+    if (mode === 'set') {
+        const newPassword = passwordInput.value.trim();
+        const confirmPassword = confirmPasswordInput.value.trim();
+        
+        if (!newPassword) {
+            if (passwordError) passwordError.textContent = '请输入密码';
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            if (passwordError) passwordError.textContent = '两次输入的密码不一致';
+            return;
+        }
+        
+        // 保存新密码
+        password = newPassword;
+        localStorage.setItem('studentPointsSystemPassword', password);
+        closePasswordDialog();
+        showToast('密码设置成功');
+    }
+    else if (mode === 'verify_then_set') {
+        const inputPassword = passwordInput.value.trim();
+        
+        if (inputPassword !== password) {
+            if (passwordError) passwordError.textContent = '密码错误';
+            return;
+        }
+        
+        // 验证成功，显示设置新密码界面
+        const passwordDialogTitle = document.getElementById('password-dialog-title');
+        if (passwordDialogTitle) passwordDialogTitle.textContent = '设置新密码';
+        if (confirmPasswordInput) confirmPasswordInput.style.display = 'block';
+        if (passwordInput) passwordInput.value = '';
+        if (passwordError) passwordError.textContent = '';
+        passwordDialog.dataset.mode = 'set';
+    }
+    else if (mode === 'verify') {
+        const inputPassword = passwordInput.value.trim();
+        
+        if (inputPassword !== password) {
+            if (passwordError) passwordError.textContent = '密码错误';
+            return;
+        }
+        
+        // 密码验证成功
+        closePasswordDialog();
+        
+        // 执行回调函数
+        if (passwordDialog.dataset.callback === 'unlock') {
+            // 解锁操作
+            toggleLockState(false);
+        }
+        else if (passwordDialog.dataset.callback === 'disable_protection') {
+            // 禁用密码保护
+            passwordProtectionEnabled = false;
+            localStorage.setItem('studentPointsSystemPasswordProtection', 'false');
+            const passwordProtectionToggle = document.getElementById('password-protection-toggle');
+            if (passwordProtectionToggle) {
+                passwordProtectionToggle.checked = false;
+            }
+            showToast('已禁用密码保护');
+        }
+    }
+}
+    
+    // 重写锁图标点击事件，如果已经存在就不重复绑定
+    if (lockIcon && !lockIcon._passwordProtectionBound) {
+        // 移除原有的事件监听
+        const newLockIcon = lockIcon.cloneNode(true);
+        lockIcon.parentNode.replaceChild(newLockIcon, lockIcon);
+        
+        // 绑定新的事件监听
+newLockIcon.addEventListener('click', () => {
+    if (!isLocked) {
+        // 当前是解锁状态，点击直接锁定
+        toggleLockState(true);
+    } else {
+        // 当前是锁定状态，需要验证密码才能解锁
+        if (passwordProtectionEnabled && password) {
+            // 启用了密码保护且已设置密码，弹出密码验证
+            openPasswordDialog('verify', 'unlock');
+        } else {
+            // 未启用密码保护或未设置密码，直接解锁
+            toggleLockState(false);
+        }
+    }
+});
+        
+        newLockIcon._passwordProtectionBound = true;
+      // 初始化锁图标状态
+updateLockIconState();
+    }
+});
+      // 打开密码对话框
+function openPasswordDialog(mode, callback) {
+    const passwordDialog = document.getElementById('password-dialog');
+    const passwordInput = document.getElementById('password-input');
+    const confirmPasswordInput = document.getElementById('confirm-password-input');
+    const passwordError = document.getElementById('password-error');
+    const passwordDialogTitle = document.getElementById('password-dialog-title');
+    
+    if (!passwordDialog) return;
+    
+    passwordDialog.style.display = 'flex';
+    if (passwordInput) passwordInput.value = '';
+    if (confirmPasswordInput) confirmPasswordInput.value = '';
+    if (passwordError) passwordError.textContent = '';
+    
+    if (mode === 'set') {
+        // 检查是否已有密码，如果有则需要先验证
+        if (password) {
+            if (passwordDialogTitle) passwordDialogTitle.textContent = '请输入当前密码';
+            if (confirmPasswordInput) confirmPasswordInput.style.display = 'none';
+            passwordDialog.dataset.mode = 'verify_then_set';
+        } else {
+            if (passwordDialogTitle) passwordDialogTitle.textContent = '设置密码';
+            if (confirmPasswordInput) confirmPasswordInput.style.display = 'block';
+            passwordDialog.dataset.mode = 'set';
+        }
+    } else if (mode === 'verify') {
+        if (passwordDialogTitle) passwordDialogTitle.textContent = '请输入密码';
+        if (confirmPasswordInput) confirmPasswordInput.style.display = 'none';
+        passwordDialog.dataset.mode = 'verify';
+        passwordDialog.dataset.callback = callback || '';
+    }
+    
+    if (passwordInput) passwordInput.focus();
+}
+    </script>
+<script>
+// 强制重新绑定事件监听器
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        const pointsButton = document.getElementById('points-button');
+        const seatingButton = document.getElementById('seating-button');
+        const homeworkButton = document.getElementById('homework-button');
+        const mainContent = document.querySelector('.container');
+        const seatingModule = document.getElementById('seating-module');
+        const homeworkModule = document.getElementById('homework-module');
+        
+        // 移除所有现有的事件监听器，重新绑定
+        const newPointsButton = pointsButton.cloneNode(true);
+        const newSeatingButton = seatingButton.cloneNode(true);
+        const newHomeworkButton = homeworkButton.cloneNode(true);
+        
+        pointsButton.parentNode.replaceChild(newPointsButton, pointsButton);
+        seatingButton.parentNode.replaceChild(newSeatingButton, seatingButton);
+        homeworkButton.parentNode.replaceChild(newHomeworkButton, homeworkButton);
+        
+        // 重新绑定事件
+        newPointsButton.addEventListener('click', function() {
+            console.log('点击积分管理');
+            newPointsButton.classList.add('active');
+            newSeatingButton.classList.remove('active');
+            newHomeworkButton.classList.remove('active');
+            mainContent.style.display = 'block';
+            seatingModule.style.display = 'none';
+            homeworkModule.style.display = 'none';
+        });
+        
+        newSeatingButton.addEventListener('click', function() {
+            console.log('点击座位调整');
+            if (!seatingModule.hasChildNodes()) {
+                initSeatingModule();
+            }
+            newSeatingButton.classList.add('active');
+            newPointsButton.classList.remove('active');
+            newHomeworkButton.classList.remove('active');
+            mainContent.style.display = 'none';
+            seatingModule.style.display = 'block';
+            homeworkModule.style.display = 'none';
+        });
+        
+        newHomeworkButton.addEventListener('click', function() {
+            console.log('点击作业查收');
+            if (!homeworkModule.hasChildNodes()) {
+                initHomeworkModule();
+            }
+            newHomeworkButton.classList.add('active');
+            newPointsButton.classList.remove('active');
+            newSeatingButton.classList.remove('active');
+            mainContent.style.display = 'none';
+            seatingModule.style.display = 'none';
+            homeworkModule.style.display = 'block';
+        });
+    }, 1000);
+});
+</script>
+</body>
+</html>
